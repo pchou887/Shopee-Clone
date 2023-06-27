@@ -1,0 +1,106 @@
+import { NextFunction, Router } from "express";
+import { body, param } from "express-validator";
+import {
+  getUserRoles,
+  addUserRole,
+  updateUserRole,
+  deleteUserRole,
+} from "../controllers/role.js";
+import {
+  createStore,
+  createStaff,
+  getStore,
+  getStores,
+  getUserStores,
+  getStoreStaff,
+} from "../controllers/store.js";
+import * as validator from "../middlewares/validator.js";
+import authenticate from "../middlewares/authenticate.js";
+import * as authorization from "../middlewares/authorization.js";
+const router = Router();
+
+router.route("/store").post([authenticate, createStore]);
+router.route("/stores").get([authenticate, getStores]);
+router
+  .route("/store/:storeId")
+  .get([
+    param("storeId").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    getStore,
+  ]);
+router.route("/stores/staff").get([authenticate, getUserStores]);
+router
+  .route("/store/:storeId/users")
+  .get([
+    param("storeId").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    authorization.addStaffPermission,
+    getStoreStaff,
+  ]);
+
+router
+  .route("/store/:storeId/user")
+  .post([
+    param("storeId").not().isEmpty().trim().isInt(),
+    body("role_id").not().isEmpty().trim().isInt(),
+    body("user_id").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    authorization.addStaffPermission,
+    createStaff,
+  ]);
+router
+  .route("/store/:storeId/user/:userId/roles")
+  .get([
+    param("storeId").not().isEmpty().trim().isInt(),
+    param("userId").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    authorization.checkRolesPermission,
+    getUserRoles,
+  ]);
+router
+  .route("/store/:storeId/user/:userId/role/insert")
+  .post([
+    param("storeId").not().isEmpty().trim().isInt(),
+    param("userId").not().isEmpty().trim().isInt(),
+    body("role_id").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    authorization.checkRolesPermission,
+    addUserRole,
+  ]);
+router
+  .route("/store/:storeId/user/:userId/role/update")
+  .put([
+    param("storeId").not().isEmpty().trim().isInt(),
+    param("userId").not().isEmpty().trim().isInt(),
+    body("role_id").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    authorization.checkRolesPermission,
+    updateUserRole,
+  ]);
+router
+  .route("/store/:storeId/user/:userId/role/delete")
+  .delete([
+    param("storeId").not().isEmpty().trim().isInt(),
+    param("userId").not().isEmpty().trim().isInt(),
+    body("roleId").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    authorization.checkRolesPermission,
+    deleteUserRole,
+  ]);
+router
+  .route("/store/:storeId/delete")
+  .delete([
+    param("storeId").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    authenticate,
+    authorization.checkStoreAdmin,
+    deleteUserRole,
+  ]);
+export default router;

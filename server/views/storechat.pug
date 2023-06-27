@@ -1,0 +1,16 @@
+extends layout.pug
+block css
+    style.
+        .room:hover{
+            cursor: pointer;
+        }
+block content
+    #chat.d-flex
+        div.border-end.border-bottom.user(style="width: calc(25% - 100px); height:100%;") user
+        .w-75.h-100
+            .chat
+            .fixed-bottom.d-flex
+                input.w-75.p-3.ms-auto(type="text")
+                button.btn.btn-outline-success.send(type="button" style="width: 100px") 送出
+block script
+    script(src="/javascripts/storechat.js")

@@ -1,0 +1,37 @@
+extends layout.pug 
+block content
+    div.d-flex.justify-content-between.pt-5
+        button.go-login.btn.btn-outline-success.m-auto.mb-2(style="width:220px") 我有帳號，前往登入
+        button.go-register.btn.btn-outline-primary.m-auto.mb-2(style="width:220px") 我沒有帳號，前往註冊
+    section.d-flex.justify-content-center.mt-5.flex-column
+        div.login
+            h1.text-center.pb-5 會員登入
+            div.me-5.ps-5.rounded-3
+                form#native-login
+                    label.form-label  Enter your email:
+                    input.form-control(type="email", name="email", placeholder="Enter your email")
+                    label.form-label Enter your password:
+                    input.form-control(type="password", name="password", placeholder="Enter your password", minlength="6")
+                    br
+                    button(type="submit", class="btn btn-outline-success") Sign in
+                div.text-danger
+                div.text-success
+        div.register
+            h1.text-center.pb-5 會員註冊
+            div.me-5.ps-5.rounded-3
+                form#native-register
+                    label.form-label Enter your name:
+                    input.form-control(type="text", name="name", placeholder="Enter your name", required)
+                    label.form-label Enter your email:
+                    input.form-control(type="email", name="email", placeholder="Enter your email", required)
+                    label.form-label Enter your password:
+                    input.form-control(type="password", name="password", placeholder="Enter your password", minlength="6", required)
+                    br
+                    button(type="submit", class="btn btn-outline-primary") Sign up
+                div.text-danger
+                div.text-success
+block script
+    script(src="/javascripts/login.js")
+    script.
+        $(".logout").hide()
+        
