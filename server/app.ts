@@ -4,12 +4,15 @@ import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
+import cors from "cors";
 import productRoute from "./routes/product.js";
 import userRoute from "./routes/user.js";
 import storeRoute from "./routes/store.js";
 import chatRoute from "./routes/chat.js";
+import orderRoute from "./routes/order.js";
 import * as redisModel from "./models/redis.js";
 import Chat from "./models/mongoose.js";
+import verifyJWT from "./utils/verifyJWT.js";
 import { errorHandler } from "./utils/errorHandler.js";
 import { fork } from "child_process";
 
@@ -17,11 +20,20 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true,
+  },
+  allowEIO3: true,
+});
 const PORT = 3000;
 const MONGO_DB = process.env.MONGO ?? "";
 const forked = fork("./dist/utils/queue.js");
 
+app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use("/", express.static("public"));
@@ -57,7 +69,13 @@ app.get("/test", (req, res) => {
   res.render("test");
 });
 
-app.use("/api/1.0", [productRoute, userRoute, storeRoute, chatRoute]);
+app.use("/api/1.0", [
+  productRoute,
+  userRoute,
+  storeRoute,
+  chatRoute,
+  orderRoute,
+]);
 
 app.use(errorHandler);
 
@@ -158,20 +176,28 @@ io.on("connection", (socket) => {
       });
     }
   });
-  socket.on("queue", async ({ amount }) => {
+  socket.on("queue", async ({ token, amount }) => {
     socket.join(socket.id);
-    const queue = await redisModel.getZset(`queue`);
-    if (queue.length > 100) {
-      io.to(socket.id).emit("overload", {
-        message: "Too many people. Please try again after a few minutes.",
-      });
-    } else {
+    try {
+      const decoded = await verifyJWT(token);
+      const userId = decoded.userId;
+      socket.join(`buy:${userId}`);
+      const queue = await redisModel.getZset(`queue`);
+      const isOrder = await redisModel.getStr(`amount:${userId}`);
+      if (queue.length > 100 && isOrder) {
+        throw new Error(
+          "Too many people. Please try again after a few minutes."
+        );
+      }
       const numberPlate = await redisModel.incrStr(`number_plate`);
-      await redisModel.setZset(`queue`, numberPlate, socket.id);
-      await redisModel.setStr(`amount:${socket.id}`, String(amount));
+      await redisModel.setZset(`queue`, numberPlate, `queue:${userId}`);
+      await redisModel.setStr(`amount:${userId}`, String(amount));
       if (!(await redisModel.getStr("ordering")))
         await redisModel.setStr("ordering", "0");
-      io.to(socket.id).emit("wait", { message: "please wait a minute." });
+      io.to(`buy:${userId}`).emit("wait", { message: "please wait a minute." });
+    } catch (err) {
+      if (err instanceof Error)
+        io.to(socket.id).emit("error", { message: err.message });
     }
   });
   socket.on("disconnect", async () => {
@@ -190,13 +216,15 @@ io.on("connection", (socket) => {
     // }
   });
 });
+
 forked.send("start");
 forked.on("message", (message: any) => {
   if (message.type === "turnTo") {
-    io.to(message.data.id).emit("turnTo", message.data);
+    io.to(`buy:${message.data.id}`).emit("turnTo", message.data);
+    io.emit("stockChange", { amount: message.data.amount });
   }
   if (message.type === "error") {
-    io.to(message.data.id).emit("error", message.data);
+    io.to(`buy:${message.data.id}`).emit("error", message.data);
   }
 });
 forked.on("error", console.error);

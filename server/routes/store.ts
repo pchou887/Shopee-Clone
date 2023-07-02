@@ -10,9 +10,9 @@ import {
   createStore,
   createStaff,
   getStore,
-  getStores,
   getUserStores,
   getStoreStaff,
+  getNotWithRoleStore,
 } from "../controllers/store.js";
 import * as validator from "../middlewares/validator.js";
 import authenticate from "../middlewares/authenticate.js";
@@ -20,16 +20,23 @@ import * as authorization from "../middlewares/authorization.js";
 const router = Router();
 
 router.route("/store").post([authenticate, createStore]);
-router.route("/stores").get([authenticate, getStores]);
+router.route("/stores").get([authenticate, getUserStores]);
+router
+  .route("/product/store/:storeId")
+  .get([
+    param("storeId").not().isEmpty().trim().isInt(),
+    validator.handleResult,
+    getNotWithRoleStore,
+  ]);
 router
   .route("/store/:storeId")
   .get([
     param("storeId").not().isEmpty().trim().isInt(),
     validator.handleResult,
     authenticate,
+    authorization.getUserRoles,
     getStore,
   ]);
-router.route("/stores/staff").get([authenticate, getUserStores]);
 router
   .route("/store/:storeId/users")
   .get([
@@ -92,15 +99,6 @@ router
     validator.handleResult,
     authenticate,
     authorization.checkRolesPermission,
-    deleteUserRole,
-  ]);
-router
-  .route("/store/:storeId/delete")
-  .delete([
-    param("storeId").not().isEmpty().trim().isInt(),
-    validator.handleResult,
-    authenticate,
-    authorization.checkStoreAdmin,
     deleteUserRole,
   ]);
 export default router;

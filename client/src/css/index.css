@@ -1,0 +1,90 @@
+@import url("https://fonts.cdnfonts.com/css/futura-pt");
+@import "./header.css";
+@import "./home.css";
+@import "./product.css";
+@import "./order.css";
+@import "./store.css";
+@import "./login.css";
+@import "./cart.css";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+a {
+  color: rgba(0, 0, 0, 0.87);
+  text-decoration: inherit;
+}
+:root {
+  font-family: "HelveticaNeue-Bold", "Helvetica Neue", "Roboto", "Droid Sans",
+    "Arial Bold", Arial, sans-serif;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 1.25;
+  font-weight: 400;
+}
+
+input {
+  padding-left: 15px;
+  height: 36px;
+  width: 300px;
+  border-radius: 50px;
+  border: #273043 solid 2px;
+}
+.main {
+  min-height: 130vh;
+  background-color: #e8e8e8;
+}
+.content {
+  margin: auto;
+  margin-top: 120px;
+  width: 1200px;
+  background-color: #fff;
+}
+
+button {
+  padding: 1rem 2rem;
+  border-radius: 5px;
+  border: dimgray 1px solid;
+  cursor: pointer;
+}
+.menu {
+  display: block;
+  position: absolute;
+  top: 119px;
+  right: calc((100vw - 1200px) / 2);
+  z-index: 700;
+  overflow-y: auto;
+  width: 200px;
+  box-shadow: 0 1px 4px rgba(230, 230, 230, 1);
+  border-radius: 4px;
+  background-color: #fff;
+  border: 1px solid rgba(230, 230, 230, 1);
+}
+.menu a,
+.menu div {
+  color: #273043;
+}
+.menu a:hover,
+.menu div:hover {
+  color: #9197ae;
+}
+.loading {
+  display: block;
+  float: left;
+  width: 50px;
+  height: 50px;
+  animation-name: spin;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

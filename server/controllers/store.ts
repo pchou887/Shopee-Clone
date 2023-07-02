@@ -49,7 +49,23 @@ export const createStaff = async (req: Request, res: Response) => {
 export const getStore = async (req: Request, res: Response) => {
   try {
     const stores = await storeModel.findStore(Number(req.params.storeId));
-    res.status(200).json({ data: stores[0] });
+    res
+      .status(200)
+      .json({ data: { ...stores[0], roles: res.locals.userRoles } });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(400).json({ errors: err.message });
+      return;
+    }
+    res.status(500).json({ errors: "something wrong" });
+  }
+};
+export const getNotWithRoleStore = async(req: Request, res: Response) => {
+  try {
+    const stores = await storeModel.findStore(Number(req.params.storeId));
+    res
+      .status(200)
+      .json({ data: { ...stores[0] } });
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ errors: err.message });
@@ -59,6 +75,7 @@ export const getStore = async (req: Request, res: Response) => {
   }
 };
 
+// unused api
 export const getStores = async (req: Request, res: Response) => {
   try {
     const stores = await storeModel.findStores();
@@ -71,6 +88,7 @@ export const getStores = async (req: Request, res: Response) => {
     res.status(500).json({ errors: "something wrong" });
   }
 };
+
 export const getUserStores = async (req: Request, res: Response) => {
   try {
     const stores = await storeModel.findUserStore(res.locals.userId);

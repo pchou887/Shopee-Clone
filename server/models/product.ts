@@ -120,6 +120,18 @@ export async function countProducts({
   return 0;
 }
 
+export async function countStoreProducts({ storeId }: { storeId: number }) {
+  const results = await pool.query(
+    `SELECT COUNT(id) AS count FROM products WHERE store_id = ?`,
+    [storeId]
+  );
+  if (Array.isArray(results[0]) && instanceOfProductCount(results[0][0])) {
+    const productCount = ProductCountSchema.parse(results[0][0]);
+    return productCount.count;
+  }
+  return 0;
+}
+
 function instanceOfSetHeader(object: any): object is ResultSetHeader {
   return "insertId" in object;
 }
@@ -166,13 +178,12 @@ export async function isProductExist(productId: number) {
 const PartialProductSchema = z.object({
   id: z.number(),
   name: z.string(),
-  price: z.number(),
 });
 
 export async function getProductsByIds(ids: number[]) {
   const results = await pool.query(
     `
-    SELECT id, name, price FROM products
+    SELECT id, name FROM products
     WHERE id IN (?)
   `,
     [ids]
@@ -197,3 +208,23 @@ export const updateProduct = async (productData: {
     [category, name, description, id, storeId]
   );
 };
+
+export async function getStoreProducts({
+  paging = 0,
+  storeId,
+}: {
+  paging: number;
+  storeId: number;
+}) {
+  const results = await pool.query(
+    `
+    SELECT id, store_id, category, name, description FROM products
+    WHERE store_id = ?
+    ORDER BY id DESC
+    LIMIT ? OFFSET ?
+  `,
+    [storeId, PAGE_COUNT, paging * PAGE_COUNT]
+  );
+  const products = z.array(ProductSchema).parse(results[0]);
+  return products;
+}

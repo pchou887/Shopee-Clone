@@ -24,7 +24,6 @@ const isUserInStore = (
 ) => {
   const keys = Object.keys(obj).map((ele) => Number(ele));
   const checkId = Number(storeId);
-  console.log(obj, checkId);
   return keys.includes(checkId);
 };
 
@@ -178,8 +177,19 @@ export const getUserRoles = async (
   res: Response,
   next: NextFunction
 ) => {
-  if (!res.locals.userId) throw new Error("please login");
-  const userRoles = await findUserRoles(res.locals.userId);
-  const rolesWithStore = groupRolesWithStoreId(userRoles);
-  next();
+  try {
+    if (!res.locals.userId) throw new Error("please login");
+    const userRoles = await findUserRoles(res.locals.userId);
+    const rolesWithStore = groupRolesWithStoreId(userRoles);
+    if (!isUserInStore(rolesWithStore, req.params.storeId))
+      throw new Error("you aren't this store staff");
+    res.locals.userRoles = rolesWithStore[req.params.storeId];
+    next();
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(401).json({ errors: err.message });
+      return;
+    }
+    res.status(403).json({ errors: "your permission can't use this action" });
+  }
 };

@@ -4,6 +4,8 @@ import multer from "multer";
 import {
   getProducts,
   getProduct,
+  getSnapUp,
+  getStoreProducts,
   searchProducts,
   createProduct,
   updateProduct,
@@ -30,6 +32,19 @@ router
     param("id").not().isEmpty().trim(),
     validator.handleResult,
     getProduct,
+  ]);
+
+router
+  .route("/snapup/:id")
+  .get([param("id").not().isEmpty().trim(), validator.handleResult, getSnapUp]);
+
+router
+  .route("/store/:storeId/products")
+  .get([
+    param("storeId").not().isEmpty().trim(),
+    validator.handleResult,
+    authenticate,
+    getStoreProducts,
   ]);
 
 router

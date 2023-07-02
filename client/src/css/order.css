@@ -1,0 +1,33 @@
+.tpfield {
+  height: 40px;
+  width: 300px;
+  border: 1px solid gray;
+  margin: 5px 0;
+  padding: 5px;
+}
+.order-img {
+  width: 300px;
+}
+.card {
+  display: flex;
+}
+.card-title {
+  width: 100px;
+  align-self: center;
+  text-align: end;
+}
+.recipent {
+  display: flex;
+  padding-bottom: 20px;
+}
+.recipent-title {
+  width: 100px;
+  align-items: center;
+  text-align: end;
+}
+.order-info {
+  display: flex;
+}
+input {
+  padding: 5px;
+}

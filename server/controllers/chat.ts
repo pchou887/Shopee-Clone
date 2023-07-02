@@ -90,7 +90,6 @@ export const staffGetHadReplyChat = async (req: Request, res: Response) => {
     // const data = await messageModel.findMessageByStore(storeId);
 
     const resData = organizeData(data, res.locals.userId);
-    // console.log(resData);
 
     res.status(200).json({ data: resData });
   } catch (err) {

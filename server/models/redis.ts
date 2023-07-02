@@ -70,6 +70,10 @@ export const setExpireStr = async (key: string) => {
   await redis.set(key, 1, "EX", 900);
 };
 
+export const delStr = async (key: string) => {
+  await redis.del(key);
+};
+
 export const multi = async () => {
   return redis.multi({ pipeline: true });
 };

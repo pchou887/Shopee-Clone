@@ -5,7 +5,7 @@ import * as role from "../models/role.js";
 export const getUserNotOwnedRoles = async (req: Request, res: Response) => {
   try {
     const storeId = Number(req.params.storeId);
-    const userId = Number(req.body.user_id);
+    const userId = Number(req.params.user_id);
     const roles = await role.findUserNotOwnedRoles(userId, storeId);
     res.status(200).json({ data: roles });
   } catch (err) {

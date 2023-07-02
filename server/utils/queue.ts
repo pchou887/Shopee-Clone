@@ -9,43 +9,45 @@ const sleep = async (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const chechStock = async (amount: number, socketId: string) => {
-  if (await redisModel.getStr(`userOrder:${socketId}`))
-    throw new Error(
-      `You already have this product order. Please wait or go to order page. ${socketId}`
-    );
+const chechStock = async (amount: number, userId: string) => {
   const newQty = await redisModel.decrByStr(`stock`, amount);
   if (newQty < 0) {
     await redisModel.incrByStr(`stock`, amount);
-    throw new Error(`Inventory shortage ${socketId}`);
+    throw new Error(`Inventory shortage ${userId}`);
   }
-  await redisModel.decrStr("ordering");
-  await redisModel.setStr(`userOrder:${socketId}`, "waitPay");
+  await redisModel.setExpireStr(`userOrder:${userId}`);
 };
 
 const userToOrderPage = async () => {
   while (true) {
     try {
       const orderingNumber = Number(await redisModel.getStr("ordering"));
-      if (orderingNumber < 20) {
-        const userId = await redisModel.bpopminZset(`queue`);
-        if (!Array.isArray(userId)) {
+      if (orderingNumber < 2) {
+        const user = await redisModel.bpopminZset(`queue`);
+        if (!Array.isArray(user)) {
           continue;
         }
-        const userSocketId = userId[1];
-        const ordering = await redisModel.incrStr("ordering");
-        console.log(ordering);
-        console.log(userSocketId);
-        const amount = Number(
-          await redisModel.getStr(`amount:${userSocketId}`)
-        );
-        await chechStock(amount, userSocketId);
+
+        const userId = user[1].replace("queue:", "");
+        const isOrder = await redisModel.getStr(`userOrder:${userId}`);
+        if (isOrder) {
+          throw new Error(
+            `You already have this product order. Please wait or go to order page. ${userId}`
+          );
+        } else {
+          const ordering = await redisModel.incrStr("ordering");
+          console.log(ordering);
+        }
+        const amount = Number(await redisModel.getStr(`amount:${userId}`));
+        await chechStock(amount, userId);
+        console.log(userId);
         if (process.send) {
           process.send({
             type: "turnTo",
             data: {
               message: "turn to you visit order page",
-              id: userSocketId,
+              id: userId,
+              amount,
             },
           });
         }

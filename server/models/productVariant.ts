@@ -47,7 +47,7 @@ const ProductVariantSchema = z.object({
 
 type ProductVariant = z.infer<typeof ProductVariantSchema>;
 
-export async function getProductVariants(productIds: number[]) {
+export async function getProductVariantsByProductId(productIds: number[]) {
   if (productIds.length === 0) return [];
   const result = await pool.query(
     `
@@ -61,11 +61,30 @@ export async function getProductVariants(productIds: number[]) {
   return productVariants;
 }
 
+export async function getProductVariantsById(varaintIds: number[]) {
+  if (varaintIds.length === 0) return [];
+  const result = await pool.query(
+    `
+    SELECT id, product_id, kind, stock, price
+    FROM product_variants
+    WHERE id IN (?)
+  `,
+    [varaintIds]
+  );
+  const productVariants = z.array(ProductVariantSchema).parse(result[0]);
+  return productVariants;
+}
+
 export function groupVariants(productVariants: ProductVariant[]) {
   const result = productVariants.reduce(function (
     obj: {
       [productId: string]: {
-        variants: { kind: string; stock: number; price: number }[];
+        variants: {
+          variantId: number;
+          kind: string;
+          stock: number;
+          price: number;
+        }[];
       };
     },
     variant
@@ -76,6 +95,7 @@ export function groupVariants(productVariants: ProductVariant[]) {
       };
     }
     obj[variant.product_id].variants.push({
+      variantId: variant.id,
       kind: variant.kind,
       stock: variant.stock,
       price: variant.price,

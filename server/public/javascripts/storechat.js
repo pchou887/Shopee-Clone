@@ -34,7 +34,7 @@ const getUserMessage = async (jwt, userId, storeId) => {
   });
   const result = await response.json();
   if (result.errors) throw new Error("get history error");
-  return result.data[0];
+  return result.data;
 };
 
 (async function () {
@@ -51,6 +51,7 @@ const getUserMessage = async (jwt, userId, storeId) => {
         <div class="user_${ele.user_id} store_${ele.store_id} border-top room py-4">user_${ele.user_id}</div>
       `);
     });
+    if (Cookies.get("now")) Cookies.set("now", "");
   } catch (err) {
     console.log(err);
   }

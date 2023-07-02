@@ -27,6 +27,7 @@ const mapImages = (imagesObj: {
 const mapVariants = (variantsObj: {
   [productId: string]: {
     variants: {
+      variantId: number;
       kind: string;
       stock: number;
       price: number;
@@ -50,7 +51,36 @@ export const getProducts = async (req: Request, res: Response) => {
     const productIds = productsData?.map?.(mapId);
     const [images, variants] = await Promise.all([
       productImageModel.getProductImages(productIds),
-      productVariantModel.getProductVariants(productIds),
+      productVariantModel.getProductVariantsByProductId(productIds),
+    ]);
+    const imagesObj = productImageModel.groupImages(images);
+    const variantsObj = productVariantModel.groupVariants(variants);
+    const products = productsData
+      .map(mapImages(imagesObj))
+      .map(mapVariants(variantsObj));
+    res.json({
+      data: products,
+      ...(productModel.PAGE_COUNT * (paging + 1) < productsCount
+        ? { next_paging: paging + 1 }
+        : {}),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ data: [] });
+  }
+};
+export const getStoreProducts = async (req: Request, res: Response) => {
+  try {
+    const storeId = Number(req.params.storeId);
+    const paging = Number(req.query.paging) || 0;
+    const [productsData, productsCount] = await Promise.all([
+      productModel.getStoreProducts({ paging, storeId }),
+      productModel.countStoreProducts({ storeId }),
+    ]);
+    const productIds = productsData?.map?.(mapId);
+    const [images, variants] = await Promise.all([
+      productImageModel.getProductImages(productIds),
+      productVariantModel.getProductVariantsByProductId(productIds),
     ]);
     const imagesObj = productImageModel.groupImages(images);
     const variantsObj = productVariantModel.groupVariants(variants);
@@ -76,7 +106,34 @@ export const getProduct = async (req: Request, res: Response) => {
     const productIds = productsData?.map?.(mapId);
     const [images, variants] = await Promise.all([
       productImageModel.getProductImages(productIds),
-      productVariantModel.getProductVariants(productIds),
+      productVariantModel.getProductVariantsByProductId(productIds),
+    ]);
+    const imagesObj = productImageModel.groupImages(images);
+    const variantsObj = productVariantModel.groupVariants(variants);
+    const products = productsData
+      .map(mapImages(imagesObj))
+      .map(mapVariants(variantsObj));
+    res.json({
+      data: products[0],
+    });
+  } catch (err) {
+    console.error(err);
+    if (err instanceof Error) {
+      res.status(500).json({ errors: err.message });
+      return;
+    }
+    return res.status(500).json({ errors: "get products failed" });
+  }
+};
+
+export const getSnapUp = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const productsData = await productModel.getProduct(id);
+    const productIds = productsData?.map?.(mapId);
+    const [images, variants] = await Promise.all([
+      productImageModel.getProductImages(productIds),
+      productVariantModel.getProductVariantsByProductId(productIds),
     ]);
     const imagesObj = productImageModel.groupImages(images);
     const variantsObj = productVariantModel.groupVariants(variants);
@@ -108,7 +165,7 @@ export const searchProducts = async (req: Request, res: Response) => {
     const productIds = productsData?.map?.(mapId);
     const [images, variants] = await Promise.all([
       productImageModel.getProductImages(productIds),
-      productVariantModel.getProductVariants(productIds),
+      productVariantModel.getProductVariantsByProductId(productIds),
     ]);
     const imagesObj = productImageModel.groupImages(images);
     const variantsObj = productVariantModel.groupVariants(variants);
@@ -188,30 +245,5 @@ export const deleteProduct = async (req: Request, res: Response) => {
     res.status(200).json({ data: { message: "success" } });
   } catch (err) {
     if (err instanceof Error) res.json({ errors: err.message });
-  }
-};
-
-export const createLimitedTimeOrder = async (req: Request, res: Response) => {
-  try {
-    const varaintId = Number(req.body.varaint_id);
-    const amount = Number(req.body.amount);
-    if (await redisModel.getStr(`userOrder:${res.locals.userId}`))
-      throw new Error(
-        "you already have this product order. Please wait or go to order page"
-      );
-    const newQty = await redisModel.decrByStr(`varaint:${varaintId}`, amount);
-    if (newQty < 0) {
-      await redisModel.incrByStr(`varaint:${varaintId}`, amount);
-      throw new Error("Inventory shortage");
-    }
-    await redisModel.decrStr("ordering");
-    await redisModel.setStr(`userOrder:${res.locals.userId}`, "waitPay");
-    res.status(200).json({ data: { message: "please wait a second." } });
-  } catch (err) {
-    if (err instanceof Error) {
-      res.json({ errors: err.message });
-      return;
-    }
-    res.status(500).json({ errors: "Oops, Server Wrong!" });
   }
 };
