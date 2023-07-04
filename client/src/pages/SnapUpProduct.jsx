@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../utils/api";
+import toastMessage from "../utils/toast";
 
 function Product() {
   const [variantId, setVariantId] = useState("");
@@ -16,16 +17,17 @@ function Product() {
     console.log(data);
   });
   socket.on("turnTo", () => {
+    toastMessage.warn("您有 15 分鐘的時間可在此頁面操作");
     localStorage.setItem("snapUpProduct", JSON.stringify(product));
     localStorage.setItem("snapUpVariantId", variantId);
     localStorage.setItem("snapUpAmount", amount);
-    navigate("/order");
+    navigate("/snapup/order");
   });
   socket.on("stockChange", ({ amount }) => {
     setStock(stock - amount);
   });
   socket.on("error", (err) => {
-    console.log(err);
+    toastMessage.error(err);
   });
 
   useEffect(() => {

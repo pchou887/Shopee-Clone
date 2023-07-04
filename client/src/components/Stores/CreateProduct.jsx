@@ -1,24 +1,35 @@
+import { useState } from "react";
 import {
   MinusCircleOutlined,
   PlusOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 import { Button, Form, Input, InputNumber, Select, Upload, Space } from "antd";
-import { useState } from "react";
+import api from "../../utils/api";
+import toastMessage from "../../utils/toast";
+
 const { TextArea } = Input;
 
-function CreateProduct() {
+function CreateProduct({ storeId }) {
   const [main, setMain] = useState([]);
   const [images, setImages] = useState([]);
-  const onFinish = (values) => {
-    console.log("Received values of form:", values);
-    if (!values.variants.length) {
-      window.alert("請至少添加一個種類");
+  async function onFinish(values) {
+    const token = localStorage.getItem("jwtToken");
+    if (!values.variants || !values.variants.length) {
+      toastMessage.error("請至少添加一個種類");
       return;
     }
-    console.log(main);
-    console.log(images);
-  };
+    const result = await api.CreateProduct(
+      {
+        ...values,
+        store_id: storeId,
+        main_image: values.main_image?.file,
+        images: values?.images?.fileList,
+      },
+      token
+    );
+    console.log(result);
+  }
   const mainProps = {
     onRemove: (file) => {
       const index = main.indexOf(file);

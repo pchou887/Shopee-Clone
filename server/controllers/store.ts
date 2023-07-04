@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as storeModel from "../models/store.js";
+import * as userModel from "../models/user.js";
 import * as userRoleModel from "../models/userRole.js";
 import * as redisModel from "../models/redis.js";
 
@@ -60,12 +61,22 @@ export const getStore = async (req: Request, res: Response) => {
     res.status(500).json({ errors: "something wrong" });
   }
 };
-export const getNotWithRoleStore = async(req: Request, res: Response) => {
+
+export const getNotWithRoleStore = async (req: Request, res: Response) => {
   try {
-    const stores = await storeModel.findStore(Number(req.params.storeId));
+    const storeId = Number(req.params.storeId);
+    const stores = await storeModel.findStore(storeId);
+    const adminUser = await userRoleModel.findAdminUser(storeId);
+    const adminUserId = adminUser.user_id;
+    const adminProfile = await userModel.findUserById(adminUserId);
     res
       .status(200)
-      .json({ data: { ...stores[0] } });
+      .json({
+        data: {
+          ...stores[0],
+          picture: `https://d1a26cbu5iquck.cloudfront.net/${adminProfile.picture}`,
+        },
+      });
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ errors: err.message });

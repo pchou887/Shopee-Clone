@@ -6,7 +6,8 @@ function Header() {
   const token = localStorage.getItem("jwtToken");
   const [isActive, setIsActive] = useState(false);
   function handleLogout() {
-    localStorage.clear();
+    localStorage.removeItem("jwtToken");
+    localStorage.removeItem("user");
     navigate("/");
   }
   function goLogin() {

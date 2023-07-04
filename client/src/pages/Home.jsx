@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import ShowProducts from "../components/ShowProducts";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
 import Carousels from "../components/AntUtils/Carousel";
@@ -19,7 +19,6 @@ function Home() {
     }
     getProduct();
   }, []);
-  console.log(products);
   return (
     <>
       <div className="main">
@@ -41,24 +40,7 @@ function Home() {
         <div className="home-product-header">
           <h3>每日新發現</h3>
         </div>
-        <div className="home-products">
-          {products.length &&
-            products.map((ele) => (
-              <Link key={ele.id} to={`/product/${ele.id}`}>
-                <div className="home-product">
-                  <img
-                    src={ele.main_image}
-                    alt={ele.name}
-                    className="home-product-img"
-                  />
-                  <div className="home-product-info">
-                    <p className="product-name">{ele.name}</p>
-                    <p className="product-price">{`$${ele.variants[0].price}`}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-        </div>
+        <ShowProducts products={products} />
       </div>
     </>
   );

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import * as userModel from "../models/user.js";
 import * as userProviderModel from "../models/userProvider.js";
+import { findUserInfo } from "../models/userInfo.js";
 import signJWT, { EXPIRE_TIME } from "../utils/signJWT.js";
 
 const COOKIE_OPTIONS = {
@@ -170,5 +171,18 @@ export const getProfile = async (req: Request, res: Response) => {
       return;
     }
     res.status(500).json({ errors: "get profile failed" });
+  }
+};
+
+export const getUserOrderInfo = async (req: Request, res: Response) => {
+  try {
+    const userInfo = await findUserInfo(res.locals.userId);
+    res.status(200).json({ data: userInfo });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(400).json({ errors: err.message });
+      return;
+    }
+    res.status(500).json({ errors: "get user info failed" });
   }
 };

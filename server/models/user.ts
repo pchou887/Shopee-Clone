@@ -49,7 +49,7 @@ export const findUser = async (email: string) => {
   return users[0];
 };
 
-export const findUserById = async (id: string) => {
+export const findUserById = async (id: number) => {
   const results = await pool.query(
     `
     SELECT * FROM users

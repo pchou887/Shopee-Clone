@@ -14,7 +14,9 @@ function SignIn() {
       const result = await api.SignIn(email, password);
       if (result.errors) throw new Error("Login Failed.");
       localStorage.removeItem("jwtToken");
+      localStorage.removeItem("user");
       localStorage.setItem("jwtToken", result.data.access_token);
+      localStorage.setItem("user", JSON.stringify(result.data));
       toastMessage.success("Welecome!");
       return navigate("/");
     } catch (err) {

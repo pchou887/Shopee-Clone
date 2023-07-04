@@ -8,7 +8,7 @@ export const handleResult = (
 ) => {
   const result: Result = validationResult(req);
   if (!result.isEmpty()) {
-    return res.status(400).json({ errors: result.array() });
+    return res.status(400).json({ errors: JSON.stringify(result.array()) });
   }
   next();
 };

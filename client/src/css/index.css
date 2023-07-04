@@ -2,11 +2,12 @@
 @import "./header.css";
 @import "./home.css";
 @import "./product.css";
-@import "./order.css";
+/* @import "./order.css"; */
 @import "./store.css";
 @import "./login.css";
 @import "./cart.css";
-
+@import "./neworder.css";
+@import "./storeSpace.css";
 * {
   margin: 0;
   padding: 0;
@@ -68,6 +69,25 @@ button {
 .menu a:hover,
 .menu div:hover {
   color: #9197ae;
+}
+.select-btn {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px rgba(199, 199, 199) solid;
+  padding: 4px 12px;
+  margin: 10px 8px 0 0;
+  font-size: 14px;
+}
+.select-btn:hover {
+  color: #ee4d2d;
+  border: 1px #ee4d2d solid;
+}
+.select-btn-active {
+  color: #ee4d2d;
+  border: 1px #ee4d2d solid;
 }
 .loading {
   display: block;

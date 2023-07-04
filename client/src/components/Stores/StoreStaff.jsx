@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect } from "react";
 import Loading from "../Loading";
+import api from "../../utils/api";
 import toastMessage from "../../utils/toast";
 const ROLE_NAME = [
   [2, "總經理"],
@@ -12,6 +13,7 @@ const ROLE_NAME = [
 ];
 function StoreStaff({
   data,
+  storeId,
   activeStaff,
   setActiveStaff,
   activeRole,
@@ -26,8 +28,11 @@ function StoreStaff({
   const [filterRole, setFilterRole] = useState({});
   useLayoutEffect(() => {
     setIsLoad(true);
-    const userId = localStorage.getItem("userId");
-    const filterOwnId = data.filter((ele) => userId != ele.user_id);
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userId = user.user.id;
+    const filterOwnId = data.filter(
+      (ele) => userId != ele.user_id && ele.role_name != "admin"
+    );
     const filterOwnRole = filterOwnId.reduce((obj, ele) => {
       const result = ROLE_NAME.filter((role) => role[1] != ele.role_name);
       obj[ele.user_id] = [];
@@ -46,8 +51,24 @@ function StoreStaff({
   const handleRoleClick = (id) => {
     setActiveRole(id);
   };
-  const changeRoleClick = (e) => {
-    toastMessage.error("fetch error!");
+  const changeRoleClick = async (e) => {
+    const token = localStorage.getItem("jwtToken");
+    console.log(storeId);
+    console.log(targetStaff);
+    console.log(targetRole);
+    try {
+      const result = await api.ChangeRole(
+        storeId,
+        targetStaff,
+        targetRole,
+        token
+      );
+      if (result.errors) throw new Error(result.errors);
+      toastMessage.success("更改成功!");
+    } catch (err) {
+      console.log(err);
+      toastMessage.error("請確認您的權限!");
+    }
   };
   return (
     <div className="controll-permission">

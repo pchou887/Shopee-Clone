@@ -37,14 +37,9 @@ const api = {
     const result = await response.json();
     return result;
   },
-  GetStoreProducts: async (storeId, token) => {
+  GetStoreProducts: async (storeId) => {
     const response = await fetch(
-      `${hostName}${version}/store/${storeId}/products`,
-      {
-        headers: new Headers({
-          Authorization: `Bearer ${token}`,
-        }),
-      }
+      `${hostName}${version}/store/${storeId}/products`
     );
     const result = await response.json();
     return result;
@@ -99,6 +94,62 @@ const api = {
   },
   GetProduct: async (id) => {
     const response = await fetch(`${hostName}${version}/product/${id}`);
+    const result = await response.json();
+    return result;
+  },
+  GetUserInfo: async (token) => {
+    const response = await fetch(`${hostName}${version}/user/order/info`, {
+      headers: new Headers({
+        Authorization: `Bearer ${token}`,
+      }),
+    });
+    const result = await response.json();
+    return result;
+  },
+  GetProductStore: async (storeId) => {
+    const response = await fetch(
+      `${hostName}${version}/product/store/${storeId}`
+    );
+    const result = await response.json();
+    return result;
+  },
+  ChangeRole: async (storeId, userId, roleId, token) => {
+    const response = await fetch(
+      `${hostName}${version}/store/${storeId}/user/${userId}/role/update`,
+      {
+        method: "PUT",
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({
+          role_id: roleId,
+        }),
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
+  CreateProduct: async (data, token) => {
+    const formData = new FormData();
+    formData.append("store_id", data.store_id);
+    formData.append("name", data.name);
+    formData.append("category", data.category);
+    formData.append("description", data.description);
+    formData.append("main_image", data.main_image);
+    formData.append("images", data.images);
+    data.variants.forEach((ele) => {
+      formData.append("kind", ele.kind);
+      formData.append("stock", ele.stock);
+      formData.append("price", ele.price);
+    });
+    const response = await fetch(`${hostName}${version}/product/insert`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
     const result = await response.json();
     return result;
   },

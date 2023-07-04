@@ -18,6 +18,15 @@ export const findUserRoles = async (userId: number) => {
   return userRoles;
 };
 
+export const findAdminUser = async (storeId: number) => {
+  const result = await pool.query(
+    `SELECT user_id, role_id, store_id FROM user_roles WHERE store_id = ? AND role_id = ?`,
+    [storeId, ADMIN_ROLE]
+  );
+  const adminUser = z.array(UserRolesShema).parse(result[0]);
+  return adminUser[0];
+};
+
 type UserRoles = z.infer<typeof UserRolesShema>;
 
 export function groupRolesWithStoreId(userRoles: UserRoles[]) {

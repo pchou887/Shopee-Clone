@@ -264,8 +264,8 @@ export async function checkout(req: Request, res: Response) {
     const { prime, order } = req.body;
     const { shipping, payment, subtotal, freight, total, recipient, list } =
       order;
-    const isOrder = await redisModel.getStr(`userOrder:${userId}`);
-    if (!isOrder) throw new ValidationError("invalid order");
+    // const isOrder = await redisModel.getStr(`userOrder:${userId}`);
+    // if (!isOrder) throw new ValidationError("invalid order");
     const products = await checkProducts(list);
     if (subtotal + freight !== total)
       throw new ValidationError("invalid total price");

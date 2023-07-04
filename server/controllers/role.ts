@@ -75,6 +75,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
     });
   } catch (err) {
     if (err instanceof Error) {
+      console.log(err);
       res.status(400).json({ errors: err.message });
       return;
     }

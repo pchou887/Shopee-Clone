@@ -43,7 +43,6 @@ router
   .get([
     param("storeId").not().isEmpty().trim(),
     validator.handleResult,
-    authenticate,
     getStoreProducts,
   ]);
 

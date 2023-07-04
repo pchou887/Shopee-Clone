@@ -13,6 +13,7 @@ const SignUp = () => {
       const result = await api.SignUp(name, email, password);
       if (result.errors) throw new Error(result.errors);
       localStorage.removeItem("jwtToken");
+      localStorage.removeItem("user");
       localStorage.setItem("jwtToken", result.data.access_token);
       return navigate("/");
     } catch (err) {

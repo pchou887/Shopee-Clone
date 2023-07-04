@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Amount from "./Amount";
 import toastMessage from "../utils/toast";
 
@@ -14,11 +15,17 @@ function allStock(variants) {
   return sum;
 }
 
-function Product({ product, sendOrder }) {
-  const [variantId, setVariantId] = useState("");
+function Product({
+  product,
+  sendOrder,
+  store,
+  variantId,
+  setVariantId,
+  amount,
+  setAmount,
+}) {
   const [price, setPrice] = useState(priceRange(product.variants));
   const [stock, setStock] = useState(allStock(product.variants));
-  const [amount, setAmount] = useState(1);
   useEffect(() => {
     if (variantId) {
       const variant = product.variants.find(
@@ -33,23 +40,27 @@ function Product({ product, sendOrder }) {
       toastMessage.error("請選擇至少一樣商品!");
       return;
     }
-    const cartItemsByProductId = localStorage.getItem("cartProductId");
-    const cartItemsByVariantId = localStorage.getItem("cartVariantId");
+    const cartItems = localStorage.getItem("cartItems");
 
-    if (cartItemsByProductId && cartItemsByVariantId) {
-      if (cartItemsByVariantId.includes(variantId)) {
+    if (cartItems) {
+      const cartItemsObj = JSON.parse(cartItems);
+      if (cartItemsObj.some((ele) => Number(ele.variantId) === variantId)) {
         toastMessage.error("請不要加入重複的商品!");
         return;
       }
-      const cartProductArray = cartItemsByProductId.split(",");
-      const cartVariantArray = cartItemsByVariantId.split(",");
-      cartProductArray.push(product.id);
-      cartVariantArray.push(variantId);
-      localStorage.setItem("cartProductId", cartProductArray.toString());
-      localStorage.setItem("cartVariantId", cartVariantArray.toString());
+      cartItemsObj.push({ productId: product.id, variantId, amount });
+      localStorage.setItem("cartItems", JSON.stringify(cartItemsObj));
     } else {
-      localStorage.setItem("cartProductId", product.id);
-      localStorage.setItem("cartVariantId", variantId);
+      localStorage.setItem(
+        "cartItems",
+        JSON.stringify([
+          {
+            productId: product.id,
+            variantId,
+            amount,
+          },
+        ])
+      );
     }
     toastMessage.success("已將商品加入購物車!");
   }
@@ -80,15 +91,17 @@ function Product({ product, sendOrder }) {
                 <div className="info-title">種類</div>
                 {product.variants.map((ele) => {
                   return (
-                    <button
-                      className="product-kind"
+                    <div
+                      className={`select-btn ${
+                        variantId === ele.variantId ? `select-btn-active` : ""
+                      }`}
                       key={ele.variantId}
                       onClick={() => {
                         setVariantId(ele.variantId);
                       }}
                     >
                       {ele.kind}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -109,6 +122,45 @@ function Product({ product, sendOrder }) {
                 <button className="product-buy" onClick={sendOrder}>
                   直接購買
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {store && (
+        <div className="product-store">
+          <img src={store.picture} alt="" className="product-store-picture" />
+          <div className="product-store-info">
+            <div className="product-store-name">{store.name}</div>
+            <Link to={`/store/${product.store_id}/product`}>
+              <div className="product-check-store-btn">
+                <img
+                  src="https://d1a26cbu5iquck.cloudfront.net/icon/store.png"
+                  alt=""
+                  className="product-store-btn-icon"
+                />
+                查看賣場
+              </div>
+            </Link>
+          </div>
+          <div className="product-store-detail">
+            <div
+              className="product-store-detail-items"
+              style={{ paddingBottom: 20 }}
+            >
+              <div className="product-store-detail-item">
+                <div className="product-store-detail-title">加入時間</div>
+                <div className="product-store-detail-content">
+                  {new Date(store.create_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+            <div className="product-store-detail-items">
+              <div className="product-store-detail-item">
+                <div className="product-store-detail-title">地區</div>
+                <div className="product-store-detail-content">
+                  {store.city + store.district}
+                </div>
               </div>
             </div>
           </div>

@@ -70,10 +70,14 @@ export const saveProductImagesToS3 = async (
   next: NextFunction
 ) => {
   try {
-    if (Array.isArray(res.locals.images) && res.locals.images.length > 0) {
-      const images = await s3Model.uploadProductImageToS3(res.locals.images);
-      res.locals.images = images;
+    if (
+      !Array.isArray(res.locals.images) &&
+      !(res.locals?.images?.length > 0)
+    ) {
+      throw new Error("get image failed");
     }
+    const images = await s3Model.uploadProductImageToS3(res.locals.images);
+    res.locals.images = images;
     next();
   } catch (err) {
     console.error(err);

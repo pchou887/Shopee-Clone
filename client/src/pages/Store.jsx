@@ -2,6 +2,7 @@ import { useState, useLayoutEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import StoreMenu from "../components/Stores/StoreMenu";
 import api from "../utils/api";
+import toastMessage from "../utils/toast";
 import checkRoles from "../utils/checkRole";
 import StoreProduct from "../components/Stores/StoreProduct";
 import CreateProduct from "../components/Stores/CreateProduct";
@@ -33,7 +34,7 @@ function Store() {
     const token = localStorage.getItem("jwtToken");
     async function getStore() {
       try {
-        const storeProducts = await api.GetStoreProducts(storeId.id, token);
+        const storeProducts = await api.GetStoreProducts(storeId.id);
         const storeOwnRole = await api.GetStoreOwnRole(storeId.id, token);
         const storeStaff = await api.GetStoreStaff(storeId.id, token);
         const errors =
@@ -48,11 +49,13 @@ function Store() {
           ),
         });
         setStaff(storeStaff.data);
-        localStorage.setItem("userId", storeOwnRole.data.id);
       } catch (err) {
-        console.log(err);
-        localStorage.removeItem("jwtToken");
-        navigate("/login");
+        if (err.message.includes("jwt")) {
+          localStorage.removeItem("jwtToken");
+          localStorage.removeItem("user");
+          toastMessage.error("登入超時");
+          navigate("/login");
+        }
       }
     }
     getStore();
@@ -63,10 +66,11 @@ function Store() {
         <div className="store">
           <StoreMenu onClick={onClick} roles={roles} />
           {menu === "1" && products && <StoreProduct products={products} />}
-          {menu === "2" && <CreateProduct />}
+          {menu === "2" && <CreateProduct storeId={Number(storeId.id)} />}
           {menu === "5" && (
             <StoreStaff
               data={staff}
+              storeId={Number(storeId.id)}
               activeStaff={activeStaff}
               setActiveStaff={setActiveStaff}
               activeRole={activeRole}

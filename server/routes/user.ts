@@ -1,7 +1,13 @@
 import { Router, Response, Request, NextFunction } from "express";
 import { body } from "express-validator";
 import multer from "multer";
-import { signUp, signIn, fbLogin, getProfile } from "../controllers/user.js";
+import {
+  signUp,
+  signIn,
+  fbLogin,
+  getProfile,
+  getUserOrderInfo,
+} from "../controllers/user.js";
 import { PROVIDER } from "../models/userProvider.js";
 import * as validator from "../middlewares/validator.js";
 import authenticate from "../middlewares/authenticate.js";
@@ -43,5 +49,6 @@ router.route("/user/signin").post([
 ]);
 
 router.route("/user/profile").get([authenticate, getProfile]);
+router.route("/user/order/info").get([authenticate, getUserOrderInfo]);
 
 export default router;
