@@ -1,10 +1,12 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import path from "path";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
+import * as url from "url";
 import productRoute from "./routes/product.js";
 import userRoute from "./routes/user.js";
 import storeRoute from "./routes/store.js";
@@ -15,6 +17,8 @@ import Chat from "./models/mongoose.js";
 import verifyJWT from "./utils/verifyJWT.js";
 import { errorHandler } from "./utils/errorHandler.js";
 import { fork } from "child_process";
+
+const __dirname = path.resolve("../client/dist/index.html").replace("\\", "/");
 
 dotenv.config();
 
@@ -36,37 +40,11 @@ const forked = fork("./dist/utils/queue.js");
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
-app.use("/", express.static("public"));
-app.set("view engine", "pug");
+app.use(express.static("../client/dist"));
 
 app.use((req, res, next) => {
   res.locals.io = io;
   next();
-});
-
-app.get("/", (req, res) => {
-  if (req.cookies.authorization) res.redirect("/user");
-  res.render("index");
-});
-app.get("/user", (req, res) => {
-  if (!req.cookies.authorization) res.redirect("/");
-  res.render("user");
-});
-app.get("/store", (req, res) => {
-  if (!req.cookies.authorization) res.redirect("/");
-  res.render("store");
-});
-app.get("/userchat", (req, res) => {
-  if (!req.cookies.authorization) res.redirect("/");
-  res.render("userchat");
-});
-app.get("/storechat", (req, res) => {
-  if (!req.cookies.authorization) res.redirect("/");
-  res.render("storechat");
-});
-app.get("/test", (req, res) => {
-  if (!req.cookies.authorization) res.redirect("/");
-  res.render("test");
 });
 
 app.use("/api/1.0", [
@@ -76,6 +54,10 @@ app.use("/api/1.0", [
   chatRoute,
   orderRoute,
 ]);
+
+app.get("*", (req, res) => {
+  res.sendFile(__dirname);
+});
 
 app.use(errorHandler);
 

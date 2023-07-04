@@ -1,5 +1,5 @@
-const hostName = "http://localhost:3000/api/";
-const version = "1.0";
+const hostName = "";
+const version = "/api/1.0";
 
 const api = {
   SignIn: async (email, password) => {
