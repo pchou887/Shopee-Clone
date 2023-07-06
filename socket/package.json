@@ -1,0 +1,31 @@
+{
+  "name": "socket",
+  "version": "1.0.0",
+  "description": "socket server",
+  "main": "dist/socket.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tscinit": "tsc --init",
+    "build": "npx tsc --build --verbose",
+    "start": "node dist/socket.js",
+    "dev": "concurrently \"npx tsc --watch\" \"node --watch dist/socket.js\""
+  },
+  "keywords": [
+    "socket.io"
+  ],
+  "author": "Jerry",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.1",
+    "socket.io": "^4.7.1",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.2",
+    "concurrently": "^8.2.0",
+    "typescript": "^5.1.6"
+  }
+}

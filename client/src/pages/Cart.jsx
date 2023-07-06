@@ -60,7 +60,7 @@ function Cart() {
     if (localStorage.getItem("orderProducts"))
       localStorage.removeItem("orderProducts");
   }, [amount, existIds, variants]);
-  function deleteProduct(targetProductId, targetVariantId) {
+  function deleteProduct(targetVariantId) {
     const cart = localStorage.getItem("cartItems");
     const cartObj = JSON.parse(cart);
     const remainVaraints = variants.filter(
@@ -72,7 +72,7 @@ function Cart() {
       localStorage.removeItem("cartItems");
     } else {
       const remainCart = cartObj.filter(
-        (ele) => ele.variantId !== targetProductId
+        (ele) => ele.variantId !== targetVariantId
       );
       localStorage.setItem("cartItems", JSON.stringify(remainCart));
     }
@@ -176,7 +176,7 @@ function Cart() {
                   className="cart-product-operate"
                   onClick={() => {
                     setTotal(total - amount[ele.variantId] * ele.price);
-                    deleteProduct(ele.productId, ele.variantId);
+                    deleteProduct(ele.variantId);
                   }}
                 >
                   刪除

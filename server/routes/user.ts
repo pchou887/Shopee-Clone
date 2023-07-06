@@ -24,8 +24,6 @@ router
     body("name").exists().notEmpty().trim(),
     body("password").exists().notEmpty(),
     validator.handleResult,
-    uploadToBuffer.single("picture"),
-    image.checkFileType,
     signUp,
   ]);
 

@@ -14,21 +14,26 @@ function CreateProduct({ storeId }) {
   const [main, setMain] = useState([]);
   const [images, setImages] = useState([]);
   async function onFinish(values) {
-    const token = localStorage.getItem("jwtToken");
-    if (!values.variants || !values.variants.length) {
-      toastMessage.error("請至少添加一個種類");
-      return;
+    try {
+      const token = localStorage.getItem("jwtToken");
+      if (!values.variants || !values.variants.length) {
+        toastMessage.error("請至少添加一個種類");
+        return;
+      }
+      const result = await api.CreateProduct(
+        {
+          ...values,
+          store_id: storeId,
+          main_image: values.main_image?.file,
+          images: values?.images?.fileList,
+        },
+        token
+      );
+      if (result.errors) throw new Error("Oops!創建商品失敗");
+      toastMessage.success("創建成功");
+    } catch (err) {
+      toastMessage.error(err.message);
     }
-    const result = await api.CreateProduct(
-      {
-        ...values,
-        store_id: storeId,
-        main_image: values.main_image?.file,
-        images: values?.images?.fileList,
-      },
-      token
-    );
-    console.log(result);
   }
   const mainProps = {
     onRemove: (file) => {
@@ -89,7 +94,7 @@ function CreateProduct({ storeId }) {
           </Select>
         </Form.Item>
         <Form.Item
-          name="descrition"
+          name="description"
           label="描述"
           rules={[{ required: true, message: "Missing!" }]}
         >

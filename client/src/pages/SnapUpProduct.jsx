@@ -4,39 +4,73 @@ import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
+import ProductConponent from "../components/Product";
 
 function Product() {
+  const snapup = true;
   const [variantId, setVariantId] = useState("");
   const [product, setProduct] = useState("");
-  const [price, setPrice] = useState("");
+  const [store, setStore] = useState("");
   const [stock, setStock] = useState("");
   const [amount, setAmount] = useState(1);
-  const socket = io("http://localhost:3000");
+  const socket = io("http://localhost:8080");
   const navigate = useNavigate();
   socket.on("wait", (data) => {
+    toastMessage.warn("現在人數眾多請稍待片刻");
     console.log(data);
   });
-  socket.on("turnTo", () => {
+  socket.on("turnTo", (data) => {
     toastMessage.warn("您有 15 分鐘的時間可在此頁面操作");
-    localStorage.setItem("snapUpProduct", JSON.stringify(product));
-    localStorage.setItem("snapUpVariantId", variantId);
-    localStorage.setItem("snapUpAmount", amount);
+    const userInfo = JSON.parse(localStorage.getItem("user"));
+    const variant = product.variants.filter(
+      (ele) => ele.variantId === variantId
+    );
+    const sendData = {
+      ...variant[0],
+      name: product.name,
+      storeId: product.store_id,
+      image: product.main_image,
+      productId: product.id,
+      amount: data.amount,
+      expire: new Date(Number(data.expire)).toLocaleString(),
+    };
+    socket.emit("orderProduct", { ...sendData, userId: userInfo.user.id });
+    localStorage.setItem("snapUpProduct", JSON.stringify([sendData]));
     navigate("/snapup/order");
   });
-  socket.on("stockChange", ({ amount }) => {
-    setStock(stock - amount);
+  socket.on("diffStock", (data) => {
+    const variants = product.variants.map((ele) => {
+      if (ele.variantId === data.variantId)
+        return { ...ele, stock: ele.stock - data.stock };
+      return ele;
+    });
+    setProduct({ ...product, variants });
+  });
+  socket.on("addStock", (data) => {
+    const variants = product.variants.map((ele) => {
+      if (ele.variantId === data.variantId)
+        return { ...ele, stock: ele.stock + data.stock };
+      return ele;
+    });
+    setProduct({ ...product, variants });
+    setStock;
   });
   socket.on("error", (err) => {
-    toastMessage.error(err);
+    if (err.message.includes("jwt")) {
+      toastMessage.error("登入超時");
+      navigate("/login");
+      return;
+    }
+    toastMessage.error(err.message);
   });
 
   useEffect(() => {
     async function getProduct() {
       try {
-        const { data } = await api.GetSnapUpProduct(1);
-        if (!data) throw new Error("No Found Product");
-        setProduct(data);
-        setVariantId(data.variants[0].variantId);
+        const result = await api.GetSnapUpProduct(1);
+        if (result.errors) throw new Error("No Found Product");
+        setProduct(result.data);
+        setStore(result.data.store);
       } catch (err) {
         console.log(err);
       }
@@ -44,85 +78,34 @@ function Product() {
     getProduct();
   }, []);
 
-  useEffect(() => {
-    if (variantId) {
-      const variant = product.variants.find(
-        (ele) => ele.variantId === variantId
-      );
-      setPrice(variant.price);
-      setStock(variant.stock);
-    }
-  }, [product.variants, variantId]);
-
-  function sendOrder() {
+  async function sendOrder() {
     const token = localStorage.getItem("jwtToken");
-    socket.emit("queue", { token, amount });
+    if (!token) {
+      toastMessage.error("請先登入會員!");
+      navigate("/login");
+      return;
+    }
+    if (!variantId) {
+      toastMessage.error("請選擇至少一樣商品!");
+      return;
+    }
+    socket.emit("queue", { token, productId: product.id, variantId, amount });
   }
-
   return (
     <>
       {product && (
-        <div className="content">
-          <div className="product">
-            <div className="product-img">
-              <img
-                className="product-img"
-                src={product.main_image}
-                alt="product"
-              />
-            </div>
-            <div className="product-info">
-              <h1 className="product-title">{product.name}</h1>
-              <div className="product-variant">
-                種類：
-                {product.variants.map((ele) => {
-                  return (
-                    <button
-                      className="product-kind"
-                      key={ele.variantId}
-                      onClick={() => {
-                        setVariantId(ele.variantId);
-                      }}
-                    >
-                      {ele.kind}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="product-price">價格：{price}</p>
-              <div className="product-amount">
-                <button
-                  className="amount-diff amount-button"
-                  onClick={() =>
-                    setAmount(amount - 1 > 0 ? amount - 1 : amount)
-                  }
-                >
-                  -
-                </button>
-                <input
-                  className="amount"
-                  type="number"
-                  value={amount}
-                  required
-                  readOnly
-                />
-                <button
-                  className="amount-plus amount-button"
-                  onClick={() =>
-                    setAmount(amount + 1 <= 5 ? amount + 1 : amount)
-                  }
-                >
-                  +
-                </button>
-              </div>
-              <button className="product-buy" onClick={sendOrder}>
-                直接購買
-              </button>
-              <p className="product-stock">(庫存剩下 {stock})</p>
-            </div>
-          </div>
-          <div className="product-description">描述：{product.description}</div>
-        </div>
+        <ProductConponent
+          product={product}
+          store={store}
+          amount={amount}
+          setAmount={setAmount}
+          variantId={variantId}
+          setVariantId={setVariantId}
+          stock={stock}
+          setStock={setStock}
+          sendOrder={sendOrder}
+          snapup={snapup}
+        />
       )}
     </>
   );

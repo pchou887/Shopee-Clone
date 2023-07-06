@@ -1,29 +1,17 @@
 import { useRef, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import tappay from "../utils/tappay";
-import Modal from "../components/AntUtils/Modal";
-import toastMessage from "../utils/toast";
-import api from "../utils/api";
+import Modal from "./AntUtils/Modal";
 
 const TAPPAY_ID = import.meta.env.VITE_TAPPAY_ID;
 const TAPPAY_KEY = import.meta.env.VITE_TAPPAY_KEY;
 
-function Order() {
+function Order({ products, recipient, setRecipient, checkoutSubmit }) {
   const [payment, setPayment] = useState(1);
-  const [recipient, setRecipient] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
   const [modalOpen, setModalOpen] = useState(false);
-  const [products, setProducts] = useState("");
-  console.log(products);
   const cardNumberRef = useRef();
   const cardExpirationDateRef = useRef();
   const cardCCVRef = useRef();
   const formRef = useRef();
-  const navigate = useNavigate();
   const freight = 45;
   useEffect(() => {
     async function setupTappay() {
@@ -34,105 +22,9 @@ function Order() {
         cardCCVRef.current
       );
     }
-    async function getUserInfo() {
-      try {
-        const token = localStorage.getItem("jwtToken");
-        const result = await api.GetUserInfo(token);
-        if (result.errors) throw new Error(result.errors);
-        setRecipient({
-          name: result.data.name,
-          email: result.data.email,
-          phone: result.data.phone,
-          address: result.data.address,
-        });
-      } catch (err) {
-        if (err.message.includes("jwt")) {
-          toastMessage.error("登入超時");
-          navigate("/login");
-        }
-      }
-    }
     setupTappay();
-    const orderProducts = localStorage.getItem("orderProducts");
-    if (!orderProducts) {
-      toastMessage.error("您沒有任何訂單喔！");
-      navigate("/");
-    }
-    setProducts(JSON.parse(orderProducts));
-    getUserInfo();
   }, [payment]);
-  useEffect(() => {}, []);
-  async function checkoutSubmit() {
-    try {
-      const token = localStorage.getItem("jwtToken");
 
-      if (!token) {
-        toastMessage.error("請登入會員");
-        navigate("/login");
-        return;
-      }
-
-      if (Object.values(recipient).some((value) => !value)) {
-        toastMessage.error("請填寫完整訂購資料");
-        return;
-      }
-      if (!tappay.canGetPrime()) {
-        toastMessage.error("付款資料輸入有誤");
-        return;
-      }
-
-      const result = await tappay.getPrime();
-      if (result.status !== 0) {
-        toastMessage.error("付款資料輸入有誤");
-        return;
-      }
-      const subtotal = products.reduce(
-        (acc, ele) => acc + ele.price * ele.amount,
-        0
-      );
-      const list = products.map((ele) => ({
-        id: ele.productId,
-        name: ele.name,
-        variantId: ele.variantId,
-        kind: ele.kind,
-        price: ele.price,
-        qty: ele.amount,
-      }));
-      const body = {
-        prime: result.card.prime || "",
-        order: {
-          shipping: "delivery",
-          payment: "credit_card",
-          subtotal,
-          freight,
-          total: subtotal + freight,
-          recipient,
-          list,
-        },
-      };
-      const response = await fetch(
-        `http://localhost:3000/api/1.0/order/checkout`,
-        {
-          body: JSON.stringify(body),
-          headers: new Headers({
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          }),
-          method: "POST",
-        }
-      );
-      const data = await response.json();
-      if (data.errors) {
-        toastMessage.error("資料輸入或是登入有錯誤");
-        return;
-      }
-      localStorage.removeItem("orderProducts");
-      toastMessage.success("付款成功!");
-      navigate("/");
-    } catch (err) {
-      console.log(err);
-    }
-  }
   function subtotalFun() {
     return products.reduce((acc, ele) => acc + ele.price * ele.amount, 0);
   }

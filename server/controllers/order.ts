@@ -264,8 +264,65 @@ export async function checkout(req: Request, res: Response) {
     const { prime, order } = req.body;
     const { shipping, payment, subtotal, freight, total, recipient, list } =
       order;
-    // const isOrder = await redisModel.getStr(`userOrder:${userId}`);
-    // if (!isOrder) throw new ValidationError("invalid order");
+    const products = await checkProducts(list);
+    if (subtotal + freight !== total)
+      throw new ValidationError("invalid total price");
+    const { orderId } = await placeOrder({
+      userId,
+      orderInfo: {
+        shipping,
+        payment,
+        subtotal,
+        freight,
+        total,
+      },
+      recipient,
+      products,
+      connection,
+    });
+
+    await confirmOrder({
+      orderId,
+      prime,
+      amount: total,
+      recipient,
+      products,
+      connection,
+    });
+
+    res.status(200).json({ data: { number: orderId } });
+  } catch (err) {
+    console.log(err);
+    if (err instanceof ValidationError) {
+      res.status(400).json({ errors: err.message });
+      return;
+    }
+    if (err instanceof Error) {
+      res.status(500).json({ errors: err.message });
+      return;
+    }
+    res.status(500).json({ errors: "checkout failed" });
+  } finally {
+    connection.release();
+  }
+}
+export async function snapUpCheckout(req: Request, res: Response) {
+  const connection = await pool.getConnection();
+  try {
+    const userId = res.locals.userId;
+    const { prime, order } = req.body;
+    const { shipping, payment, subtotal, freight, total, recipient, list } =
+      order;
+    const { id, qty, variantId } = list;
+    const userOrderStr = await redisModel.getStr(`userOrder:${userId}`);
+    if (!userOrderStr) throw new ValidationError("invalid order");
+    const userOrder = JSON.parse(userOrderStr);
+    if (
+      userOrder.productId !== id &&
+      userOrder.variantId !== variantId &&
+      userOrder.amount !== qty
+    )
+      throw new ValidationError("invalid product");
     const products = await checkProducts(list);
     if (subtotal + freight !== total)
       throw new ValidationError("invalid total price");
@@ -292,12 +349,11 @@ export async function checkout(req: Request, res: Response) {
       connection,
     });
     await redisModel.delStr(`userOrder:${userId}`);
-    await redisModel.delStr(`amount:${userId}`);
+    await redisModel.rmZsetMember("order", `${userId}`);
     await redisModel.decrStr("ordering");
 
     res.status(200).json({ data: { number: orderId } });
   } catch (err) {
-    console.log(err);
     if (err instanceof ValidationError) {
       res.status(400).json({ errors: err.message });
       return;

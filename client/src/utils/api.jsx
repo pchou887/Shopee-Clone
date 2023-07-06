@@ -1,4 +1,4 @@
-const hostName = "";
+const hostName = import.meta.env.VITE_DEV_HOST_NAME || "";
 const version = "/api/1.0";
 
 const api = {

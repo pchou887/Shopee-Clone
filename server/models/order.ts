@@ -22,6 +22,16 @@ function instanceOfSetHeader(object: any): object is ResultSetHeader {
   return "insertId" in object;
 }
 
+const OrderCountSchema = z.object({
+  count: z.number(),
+});
+
+type OrderCount = z.infer<typeof OrderCountSchema>;
+
+function instanceOfProductCount(object: any): object is OrderCount {
+  return "count" in object;
+}
+
 export async function createOrder(
   userId: number,
   orderInfo: {
@@ -83,3 +93,22 @@ export async function getUserIdAndTotal() {
   const orders = z.array(UserIdAndTotalSchema).parse(rows);
   return orders;
 }
+
+export const checkOrderExistByUserProductId = async (
+  userId: number,
+  productId: number
+) => {
+  const results = await pool.query(
+    `
+    SELECT COUNT(id) AS count FROM \`order\`
+    INNER JOIN order_list on order_id = id
+    WHERE user_id = ? AND product_id = ?
+  `,
+    [userId, productId]
+  );
+  if (Array.isArray(results[0]) && instanceOfProductCount(results[0][0])) {
+    const orderCount = OrderCountSchema.parse(results[0][0]);
+    return orderCount.count > 0;
+  }
+  return false;
+};

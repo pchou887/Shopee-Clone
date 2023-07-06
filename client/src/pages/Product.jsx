@@ -28,7 +28,35 @@ function ProductPage() {
     }
     getProduct();
   }, []);
+  function addToCart() {
+    if (!variantId) {
+      toastMessage.error("請選擇至少一樣商品!");
+      return;
+    }
+    const cartItems = localStorage.getItem("cartItems");
 
+    if (cartItems) {
+      const cartItemsObj = JSON.parse(cartItems);
+      if (cartItemsObj.some((ele) => Number(ele.variantId) === variantId)) {
+        toastMessage.error("請不要加入重複的商品!");
+        return;
+      }
+      cartItemsObj.push({ productId: product.id, variantId, amount });
+      localStorage.setItem("cartItems", JSON.stringify(cartItemsObj));
+    } else {
+      localStorage.setItem(
+        "cartItems",
+        JSON.stringify([
+          {
+            productId: product.id,
+            variantId,
+            amount,
+          },
+        ])
+      );
+    }
+    toastMessage.success("已將商品加入購物車!");
+  }
   function sendOrder() {
     if (!variantId) {
       toastMessage.error("請選擇至少一樣商品!");
@@ -65,6 +93,7 @@ function ProductPage() {
             variantId={variantId}
             setVariantId={setVariantId}
             sendOrder={sendOrder}
+            addToCart={addToCart}
           />
         )}
       </div>

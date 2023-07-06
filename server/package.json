@@ -9,7 +9,8 @@
     "tscinit": "tsc --init",
     "build": "npx tsc --build --verbose",
     "start": "nodemon dist/app.js",
-    "queue": "node dist/snapUpWorker/socket.js",
+    "queue": "node dist/utils/queue.js",
+    "check": "node dist/utils/checkOrder.js",
     "dev": "concurrently \"npx tsc --watch\" \"node --watch dist/app.js\""
   },
   "keywords": [

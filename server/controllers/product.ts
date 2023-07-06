@@ -129,6 +129,25 @@ export const getProduct = async (req: Request, res: Response) => {
 export const getSnapUp = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
+    const redisProduct = await redisModel.getStr(`snapUp:${id}`);
+    if (redisProduct) {
+      const data = JSON.parse(redisProduct);
+      const variants = await Promise.all(
+        data.variants.map(
+          async (ele: {
+            variantId: number;
+            kind: string;
+            stock: number;
+            price: number;
+          }) => ({
+            ...ele,
+            stock: Number(await redisModel.getStr(`stock:${ele.variantId}`)),
+          })
+        )
+      );
+      res.status(200).json({ data: { ...data, variants } });
+      return;
+    }
     const productsData = await productModel.getProduct(id);
     const productIds = productsData?.map?.(mapId);
     const [images, variants] = await Promise.all([
@@ -140,6 +159,14 @@ export const getSnapUp = async (req: Request, res: Response) => {
     const products = productsData
       .map(mapImages(imagesObj))
       .map(mapVariants(variantsObj));
+
+    await redisModel.setStr(`snapUp:${id}`, JSON.stringify(products[0]));
+    await Promise.all(
+      variants.map((ele) =>
+        redisModel.setStr(`stock:${ele.id}`, String(ele.stock))
+      )
+    );
+
     res.json({
       data: products[0],
     });

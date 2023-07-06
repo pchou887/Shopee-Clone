@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Amount from "./Amount";
-import toastMessage from "../utils/toast";
 
 function priceRange(variants) {
-  const groupPrice = variants.map((ele) => ele.price);
-  const max = Math.max(groupPrice);
-  const min = Math.min(groupPrice);
-  return max === min ? min : `${max}-${min}`;
+  const groupPrice = variants.map((ele) => Number(ele.price));
+  const max = Math.max(...groupPrice);
+  const min = Math.min(...groupPrice);
+  return `${min}-${max}`;
 }
 function allStock(variants) {
-  const initValue = 0;
-  const sum = variants.reduce((acc, curr) => acc + curr.stock, initValue);
+  const sum = variants.reduce((acc, curr) => acc + curr.stock, 0);
   return sum;
 }
 
@@ -23,9 +21,12 @@ function Product({
   setVariantId,
   amount,
   setAmount,
+  addToCart,
+  snapup,
 }) {
   const [price, setPrice] = useState(priceRange(product.variants));
   const [stock, setStock] = useState(allStock(product.variants));
+  console.log(product);
   useEffect(() => {
     if (variantId) {
       const variant = product.variants.find(
@@ -35,35 +36,10 @@ function Product({
       setStock(variant.stock);
     }
   }, [product.variants, variantId]);
-  function addToCart() {
-    if (!variantId) {
-      toastMessage.error("請選擇至少一樣商品!");
-      return;
-    }
-    const cartItems = localStorage.getItem("cartItems");
+  useEffect(() => {
+    setStock(allStock(product.variants));
+  }, [product.variants]);
 
-    if (cartItems) {
-      const cartItemsObj = JSON.parse(cartItems);
-      if (cartItemsObj.some((ele) => Number(ele.variantId) === variantId)) {
-        toastMessage.error("請不要加入重複的商品!");
-        return;
-      }
-      cartItemsObj.push({ productId: product.id, variantId, amount });
-      localStorage.setItem("cartItems", JSON.stringify(cartItemsObj));
-    } else {
-      localStorage.setItem(
-        "cartItems",
-        JSON.stringify([
-          {
-            productId: product.id,
-            variantId,
-            amount,
-          },
-        ])
-      );
-    }
-    toastMessage.success("已將商品加入購物車!");
-  }
   return (
     <>
       {product && (
@@ -107,18 +83,24 @@ function Product({
               </div>
               <div className="amount-stock">
                 <div className="info-title">數量</div>
-                <Amount amount={amount} setAmount={setAmount} limited={stock} />
+                <Amount
+                  amount={amount}
+                  setAmount={setAmount}
+                  limited={snapup ? (stock > 5 ? 5 : stock) : stock}
+                />
                 <p className="product-stock">還剩{stock}件</p>
               </div>
               <div className="product-cart-buy">
-                <div className="product-cart" onClick={addToCart}>
-                  <img
-                    src="https://d1a26cbu5iquck.cloudfront.net/icon/add-cart.png"
-                    alt=""
-                    className="cart-img"
-                  />
-                  加入購物車
-                </div>
+                {addToCart && (
+                  <div className="product-cart" onClick={addToCart}>
+                    <img
+                      src="https://d1a26cbu5iquck.cloudfront.net/icon/add-cart.png"
+                      alt=""
+                      className="cart-img"
+                    />
+                    加入購物車
+                  </div>
+                )}
                 <button className="product-buy" onClick={sendOrder}>
                   直接購買
                 </button>

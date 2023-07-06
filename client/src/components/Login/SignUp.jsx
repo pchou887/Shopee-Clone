@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 
 const SignUp = () => {
-  const [password, setEmail] = useState("");
-  const [email, setPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const navigate = useNavigate();
 
@@ -15,6 +15,7 @@ const SignUp = () => {
       localStorage.removeItem("jwtToken");
       localStorage.removeItem("user");
       localStorage.setItem("jwtToken", result.data.access_token);
+      localStorage.setItem("user", result.data);
       return navigate("/");
     } catch (err) {
       console.log(err);

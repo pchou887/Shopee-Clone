@@ -18,7 +18,8 @@ function Store() {
   const [targetRole, setTargetRole] = useState("");
   const [activeRole, setActiveRole] = useState(null);
   const [roles, setRoles] = useState({
-    isProduct: false,
+    isCreateProduct: false,
+    isRemoveProduct: false,
     isPermission: false,
     isCustomerService: false,
   });
@@ -42,7 +43,8 @@ function Store() {
         if (errors) throw new Error(errors);
         setProducts(storeProducts.data);
         setRoles({
-          isProduct: checkRoles.createProduct(storeOwnRole.data.roles),
+          isCreateProduct: checkRoles.createProduct(storeOwnRole.data.roles),
+          isRemoveProduct: checkRoles.removeProduct(storeOwnRole.data.roles),
           isPermission: checkRoles.Permission(storeOwnRole.data.roles),
           isCustomerService: checkRoles.CustomerService(
             storeOwnRole.data.roles

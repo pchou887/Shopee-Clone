@@ -1,7 +1,4 @@
 import { Redis } from "ioredis";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 export const redis = new Redis({
   port: 6379,
@@ -9,6 +6,7 @@ export const redis = new Redis({
   username: process.env.REDIS_USER,
   password: process.env.REDIS_PASSWORD,
 });
+
 export const pubsub = new Redis({
   port: 6379,
   host: process.env.REDIS_HOST,
@@ -55,45 +53,6 @@ export const getZset = async (key: string) => {
   return result;
 };
 
-export const getZsetWithScores = async (key: string) => {
-  const result = await redis.zrange(key, 0, -1, "WITHSCORES");
-  return result;
-};
-
-export const getZsetMemberScore = async (key: string, member: string) => {
-  const result = await redis.zmscore(key, member);
-  return result[0];
-};
-
 export const incrZset = async (key: string, incr: number, member: string) => {
   await redis.zincrby(key, incr, member);
-};
-
-export const rmZsetMember = async (key: string, member: string) => {
-  await redis.zrem(key, member);
-};
-
-export const bpopminZset = async (key: string) => {
-  const result = await redis.bzpopmin(key, 1);
-  return result;
-};
-
-export const setExpireStr = async (key: string) => {
-  await redis.set(key, 1, "EX", 900);
-};
-
-export const setHset = async (key: string, value: any) => {
-  await redis.hset(key, value);
-};
-
-export const delStr = async (key: string) => {
-  await redis.del(key);
-};
-
-export const multi = async () => {
-  return redis.multi({ pipeline: true });
-};
-
-export const exec = () => {
-  return redis.exec((err, result) => result);
 };

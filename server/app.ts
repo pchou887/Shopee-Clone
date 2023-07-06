@@ -6,7 +6,6 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
-import * as url from "url";
 import productRoute from "./routes/product.js";
 import userRoute from "./routes/user.js";
 import storeRoute from "./routes/store.js";
@@ -16,7 +15,6 @@ import * as redisModel from "./models/redis.js";
 import Chat from "./models/mongoose.js";
 import verifyJWT from "./utils/verifyJWT.js";
 import { errorHandler } from "./utils/errorHandler.js";
-import { fork } from "child_process";
 
 const __dirname = path.resolve("../client/dist/index.html").replace("\\", "/");
 
@@ -35,7 +33,6 @@ const io = new Server(server, {
 });
 const PORT = 3000;
 const MONGO_DB = process.env.MONGO ?? "";
-const forked = fork("./dist/utils/queue.js");
 
 app.use(cors());
 app.use(cookieParser());
@@ -158,30 +155,6 @@ io.on("connection", (socket) => {
       });
     }
   });
-  socket.on("queue", async ({ token, amount }) => {
-    socket.join(socket.id);
-    try {
-      const decoded = await verifyJWT(token);
-      const userId = decoded.userId;
-      socket.join(`buy:${userId}`);
-      const queue = await redisModel.getZset(`queue`);
-      const isOrder = await redisModel.getStr(`amount:${userId}`);
-      if (queue.length > 100 && isOrder) {
-        throw new Error(
-          "Too many people. Please try again after a few minutes."
-        );
-      }
-      const numberPlate = await redisModel.incrStr(`number_plate`);
-      await redisModel.setZset(`queue`, numberPlate, `queue:${userId}`);
-      await redisModel.setStr(`amount:${userId}`, String(amount));
-      if (!(await redisModel.getStr("ordering")))
-        await redisModel.setStr("ordering", "0");
-      io.to(`buy:${userId}`).emit("wait", { message: "please wait a minute." });
-    } catch (err) {
-      if (err instanceof Error)
-        io.to(socket.id).emit("error", { message: err.message });
-    }
-  });
   socket.on("disconnect", async () => {
     const staffStatus = await redisModel.getZset("staffStatus");
     const isStaff = staffStatus.filter((ele) => ele.includes(socket.id));
@@ -192,27 +165,7 @@ io.on("connection", (socket) => {
         isStaff[0].replace(`:${socket.id}`, "")
       );
     }
-    // const queueMembers = await redisModel.getZset(`queue`);
-    // if (queueMembers.length) {
-    //   await redisModel.rmZsetMember("queue", socket.id);
-    // }
   });
-});
-
-forked.send("start");
-forked.on("message", (message: any) => {
-  if (message.type === "turnTo") {
-    io.to(`buy:${message.data.id}`).emit("turnTo", message.data);
-    io.emit("stockChange", { amount: message.data.amount });
-  }
-  if (message.type === "error") {
-    io.to(`buy:${message.data.id}`).emit("error", message.data);
-  }
-});
-forked.on("error", console.error);
-forked.on("exit", (code) => {
-  if (code != 0)
-    console.error(new Error(`Worker stopped with exit code ${code}`));
 });
 
 server.listen(PORT || 3000, () =>

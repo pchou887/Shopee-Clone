@@ -1,24 +1,13 @@
 import * as redisModel from "../models/redis.js";
 
-process.on("message", () => {
-  console.log("worker doing.");
-  userToOrderPage();
-});
+const pubsubClient = redisModel.pubsub;
 
 const sleep = async (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const chechStock = async (amount: number, userId: string) => {
-  const newQty = await redisModel.decrByStr(`stock`, amount);
-  if (newQty < 0) {
-    await redisModel.incrByStr(`stock`, amount);
-    throw new Error(`Inventory shortage ${userId}`);
-  }
-  await redisModel.setExpireStr(`userOrder:${userId}`);
-};
-
 const userToOrderPage = async () => {
+  console.log("queue is working");
   while (true) {
     try {
       const orderingNumber = Number(await redisModel.getStr("ordering"));
@@ -29,45 +18,43 @@ const userToOrderPage = async () => {
         }
 
         const userId = user[1].replace("queue:", "");
-        const isOrder = await redisModel.getStr(`userOrder:${userId}`);
-        if (isOrder) {
+        const userOrderStr = await redisModel.getStr(`userOrder:${userId}`);
+        const orderingQueue = await redisModel.getZsetWithScores("order");
+        if (!userOrderStr) throw new Error("you didn't in queue");
+        if (orderingQueue.length && orderingQueue.includes(userId)) {
           throw new Error(
             `You already have this product order. Please wait or go to order page. ${userId}`
           );
-        } else {
-          const ordering = await redisModel.incrStr("ordering");
-          console.log(ordering);
         }
-        const amount = Number(await redisModel.getStr(`amount:${userId}`));
-        await chechStock(amount, userId);
-        console.log(userId);
-        if (process.send) {
-          process.send({
-            type: "turnTo",
-            data: {
-              message: "turn to you visit order page",
-              id: userId,
-              amount,
-            },
-          });
-        }
+        const userOrder = JSON.parse(userOrderStr);
+        const expireTime = new Date().getTime() + 1 * 60 * 1000;
+        await redisModel.incrStr("ordering");
+        await redisModel.setZset("order", expireTime, userId);
+        const amount = Number(userOrder.amount);
+        const data = {
+          message: "turn to you visit order page",
+          id: userId,
+          amount,
+          variantId: userOrder.variantId,
+          expire: expireTime,
+        };
+        pubsubClient.publish("turn-to", JSON.stringify(data));
       } else {
         await sleep(1000);
       }
     } catch (err) {
-      if (process.send && err instanceof Error) {
+      if (err instanceof Error) {
         const tmpArr = err.message.split(" ");
-        const socketId = tmpArr[tmpArr.length - 1];
-        process.send({
-          type: "error",
-          data: {
-            message: err.message.replace(` ${socketId}`, ""),
-            id: socketId,
-          },
-        });
+        const userId = tmpArr[tmpArr.length - 1];
+        const data = {
+          message: err.message.replace(` ${userId}`, ""),
+          id: userId,
+        };
+        pubsubClient.publish("error", JSON.stringify(data));
       }
-      console.error(err);
       continue;
     }
   }
 };
+
+userToOrderPage();

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import tappay from "../utils/tappay";
 import toastMessage from "../utils/toast";
-import api from "../utils/api";
 import OrderConponent from "../components/Order";
 
 function Order() {
@@ -12,36 +11,18 @@ function Order() {
     phone: "",
     address: "",
   });
-  const [products, setProducts] = useState("");
+  const [product, setProduct] = useState("");
   const navigate = useNavigate();
   const freight = 45;
   useEffect(() => {
-    async function getUserInfo() {
-      try {
-        const token = localStorage.getItem("jwtToken");
-        const result = await api.GetUserInfo(token);
-        if (result.errors) throw new Error(result.errors);
-        setRecipient({
-          name: result.data.name,
-          email: result.data.email,
-          phone: result.data.phone,
-          address: result.data.address,
-        });
-      } catch (err) {
-        if (err.message.includes("jwt")) {
-          toastMessage.error("登入超時");
-          navigate("/login");
-        }
-      }
-    }
-    const orderProducts = localStorage.getItem("orderProducts");
-    if (!orderProducts) {
+    const snapUpProduct = localStorage.getItem("snapUpProduct");
+    if (!snapUpProduct) {
       toastMessage.error("您沒有任何訂單喔！");
       navigate("/");
     }
-    setProducts(JSON.parse(orderProducts));
-    getUserInfo();
+    setProduct(JSON.parse(snapUpProduct));
   }, []);
+  console.log(product);
   async function checkoutSubmit() {
     try {
       const token = localStorage.getItem("jwtToken");
@@ -56,8 +37,9 @@ function Order() {
         toastMessage.error("請填寫完整訂購資料");
         return;
       }
+
       if (!tappay.canGetPrime()) {
-        toastMessage.error("付款資料輸入有誤");
+        window.alert("付款資料輸入有誤");
         return;
       }
 
@@ -66,11 +48,11 @@ function Order() {
         toastMessage.error("付款資料輸入有誤");
         return;
       }
-      const subtotal = products.reduce(
+      const subtotal = product.reduce(
         (acc, ele) => acc + ele.price * ele.amount,
         0
       );
-      const list = products.map((ele) => ({
+      const list = product.map((ele) => ({
         id: ele.productId,
         name: ele.name,
         variantId: ele.variantId,
@@ -79,7 +61,7 @@ function Order() {
         qty: ele.amount,
       }));
       const body = {
-        prime: result.card.prime || "",
+        prime: result.card.prime,
         order: {
           shipping: "delivery",
           payment: "credit_card",
@@ -91,7 +73,7 @@ function Order() {
         },
       };
       const response = await fetch(
-        `http://localhost:3000/api/1.0/order/checkout`,
+        `http://localhost:3000/api/1.0/snapup/order/checkout`,
         {
           body: JSON.stringify(body),
           headers: new Headers({
@@ -103,20 +85,22 @@ function Order() {
       );
       const data = await response.json();
       if (data.errors) {
+        console.log(data.errors);
         toastMessage.error("資料輸入或是登入有錯誤");
         return;
       }
-      localStorage.removeItem("orderProducts");
-      toastMessage.success("付款成功!");
+      localStorage.removeItem("snapUpProduct");
+      window.alert("付款成功");
       navigate("/");
     } catch (err) {
       console.log(err);
     }
   }
+
   return (
     <>
       <OrderConponent
-        products={products}
+        products={product}
         recipient={recipient}
         setRecipient={setRecipient}
         checkoutSubmit={checkoutSubmit}

@@ -3,13 +3,13 @@ import Main from "./pages/Main";
 import Home from "./pages/Home";
 import SnapUpProduct from "./pages/SnapUpProduct";
 import Cart from "./pages/Cart";
-import SnapOrder from "./pages/Order";
+import SnapOrder from "./pages/SnapUpOrder";
 import Login from "./pages/Login";
 import Stores from "./pages/Stores";
 import Store from "./pages/Store";
 import Profile from "./pages/Profile";
 import Product from "./pages/Product";
-import Order from "./pages/NewOrder";
+import Order from "./pages/Order";
 import StoreProducts from "./pages/StoreProduct";
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
           <Route path="/product/:id" element={<Product />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/snapup" element={<SnapUpProduct />} />
-          {/* <Route path="/order" element={<Order />} /> */}
+          <Route path="/snapup/order" element={<SnapOrder />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/stores" element={<Stores />} />
