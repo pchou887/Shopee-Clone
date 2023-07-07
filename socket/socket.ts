@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import express from "express";
 import { createServer } from "https";
 import { Server } from "socket.io";
 import * as redisModel from "./redis.js";
@@ -15,10 +16,14 @@ const __dirnamePrivate = path.resolve(PRIVATE_KEY).replace(/\\/g, "/");
 const __dirnameCertificate = path.resolve(CERTIFICATE_CRT).replace(/\\/g, "/");
 
 const PORT = 8080;
-const server = createServer({
-  key: fs.readFileSync(__dirnamePrivate),
-  cert: fs.readFileSync(__dirnameCertificate),
-});
+const app = express();
+const server = createServer(
+  {
+    key: fs.readFileSync(__dirnamePrivate),
+    cert: fs.readFileSync(__dirnameCertificate),
+  },
+  app
+);
 const io = new Server(server, {
   cors: {
     origin: "*",

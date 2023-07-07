@@ -67,7 +67,7 @@ function Product() {
   useEffect(() => {
     async function getProduct() {
       try {
-        const result = await api.GetSnapUpProduct(1);
+        const result = await api.GetSnapUpProduct(7);
         if (result.errors) throw new Error("No Found Product");
         setProduct(result.data);
         setStore(result.data.store);
