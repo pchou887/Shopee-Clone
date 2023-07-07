@@ -90,17 +90,14 @@ function Order() {
           list,
         },
       };
-      const response = await fetch(
-        `http://localhost:3000/api/1.0/order/checkout`,
-        {
-          body: JSON.stringify(body),
-          headers: new Headers({
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          }),
-          method: "POST",
-        }
-      );
+      const response = await fetch(`/api/1.0/order/checkout`, {
+        body: JSON.stringify(body),
+        headers: new Headers({
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        }),
+        method: "POST",
+      });
       const data = await response.json();
       if (data.errors) {
         toastMessage.error("資料輸入或是登入有錯誤");

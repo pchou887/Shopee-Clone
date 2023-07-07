@@ -13,7 +13,7 @@ function Product() {
   const [store, setStore] = useState("");
   const [stock, setStock] = useState("");
   const [amount, setAmount] = useState(1);
-  const socket = io("http://localhost:8080");
+  const socket = io("https://socket.hyperushle.com");
   const navigate = useNavigate();
   socket.on("wait", (data) => {
     toastMessage.warn("現在人數眾多請稍待片刻");

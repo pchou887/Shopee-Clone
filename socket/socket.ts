@@ -1,4 +1,6 @@
-import { createServer } from "http";
+import path from "path";
+import fs from "fs";
+import { createServer } from "https";
 import { Server } from "socket.io";
 import * as redisModel from "./redis.js";
 import verifyJWT from "./verifyJWT.js";
@@ -6,9 +8,18 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "./private.key";
+const CERTIFICATE_CRT = process.env.CERTIFICATE_CRT || "./cert.crt";
+
+const __dirnamePrivate = path.resolve(PRIVATE_KEY).replace(/\\/g, "/");
+const __dirnameCertificate = path.resolve(CERTIFICATE_CRT).replace(/\\/g, "/");
+
 const PORT = 8080;
-const httpServer = createServer();
-const io = new Server(httpServer, {
+const server = createServer({
+  key: fs.readFileSync(__dirnamePrivate),
+  cert: fs.readFileSync(__dirnameCertificate),
+});
+const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -90,4 +101,4 @@ pubsubClient.on("message", (channel: string, message: string) => {
   }
 });
 
-httpServer.listen(PORT || 8080, () => console.log("Socket server on 8080"));
+server.listen(PORT || 8080, () => console.log("Socket server on 8080"));

@@ -2,7 +2,8 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
-import { createServer } from "http";
+import fs from "fs";
+import { createServer } from "https";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -13,15 +14,25 @@ import chatRoute from "./routes/chat.js";
 import orderRoute from "./routes/order.js";
 import * as redisModel from "./models/redis.js";
 import Chat from "./models/mongoose.js";
-import verifyJWT from "./utils/verifyJWT.js";
 import { errorHandler } from "./utils/errorHandler.js";
-
-const __dirname = path.resolve("../client/dist/index.html").replace("\\", "/");
 
 dotenv.config();
 
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "./private.key";
+const CERTIFICATE_CRT = process.env.CERTIFICATE_CRT || "./cert.crt";
+
+const __dirname = path.resolve("../client/dist/index.html").replace(/\\/g, "/");
+const __dirnamePrivate = path.resolve(PRIVATE_KEY).replace(/\\/g, "/");
+const __dirnameCertificate = path.resolve(CERTIFICATE_CRT).replace(/\\/g, "/");
+
 const app = express();
-const server = createServer(app);
+const server = createServer(
+  {
+    key: fs.readFileSync(__dirnamePrivate),
+    cert: fs.readFileSync(__dirnameCertificate),
+  },
+  app
+);
 const io = new Server(server, {
   cors: {
     origin: "*",
