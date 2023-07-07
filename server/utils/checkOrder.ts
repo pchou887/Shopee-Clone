@@ -61,11 +61,12 @@ const checkExpireOrder = async () => {
           },
           []
         );
-        await Promise.all(
+        await Promise.all([
           userOrders.map((ele) =>
             redisModel.incrByStr(`stock:${ele.variantId}`, ele.amount)
-          )
-        );
+          ),
+          userOrders.map((ele) => redisModel.delStr(`userOrder:${ele.userId}`)),
+        ]);
         await redisModel.decrByStr("ordering", expireUserIds.length);
         userOrders.forEach((ele) =>
           pubsubClient.publish(
