@@ -45,8 +45,10 @@ export const findStore = async (storeId: number) => {
   const stores = z.array(storeSchema).parse(result[0]);
   return stores;
 };
-export const findStores = async () => {
-  const result = await pool.query(`SELECT * FROM store;`);
+export const findStores = async (storeIds: number[]) => {
+  const result = await pool.query(`SELECT * FROM store WHERE id IN (?)`, [
+    storeIds,
+  ]);
 
   const stores = z.array(storeSchema).parse(result[0]);
   return stores;

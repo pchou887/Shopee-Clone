@@ -22,7 +22,9 @@ export const createStore = async (req: Request, res: Response) => {
 };
 export const createStaff = async (req: Request, res: Response) => {
   try {
-    const userId = Number(req.body.user_id);
+    const user = await userModel.findUser(req.body.email);
+    if (!user) throw new Error("Can't not found user");
+    const userId = user.id;
     const storeId = Number(req.params.storeId);
     const userRolesWithStore = await userRoleModel.findUserRoles(userId);
     if (userRolesWithStore.some((ele) => ele.store_id === storeId))
@@ -69,14 +71,12 @@ export const getNotWithRoleStore = async (req: Request, res: Response) => {
     const adminUser = await userRoleModel.findAdminUser(storeId);
     const adminUserId = adminUser.user_id;
     const adminProfile = await userModel.findUserById(adminUserId);
-    res
-      .status(200)
-      .json({
-        data: {
-          ...stores[0],
-          picture: `https://d1a26cbu5iquck.cloudfront.net/${adminProfile.picture}`,
-        },
-      });
+    res.status(200).json({
+      data: {
+        ...stores[0],
+        picture: `https://d1a26cbu5iquck.cloudfront.net/${adminProfile.picture}`,
+      },
+    });
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ errors: err.message });
@@ -86,24 +86,30 @@ export const getNotWithRoleStore = async (req: Request, res: Response) => {
   }
 };
 
-// unused api
-export const getStores = async (req: Request, res: Response) => {
-  try {
-    const stores = await storeModel.findStores();
-    res.status(200).json({ data: stores });
-  } catch (err) {
-    if (err instanceof Error) {
-      res.status(400).json({ errors: err.message });
-      return;
-    }
-    res.status(500).json({ errors: "something wrong" });
-  }
-};
+interface StoreSchema {
+  id: number;
+  name: string;
+  city: string;
+  district: string;
+  create_at: Date;
+}
 
 export const getUserStores = async (req: Request, res: Response) => {
   try {
     const stores = await storeModel.findUserStore(res.locals.userId);
-    res.status(200).json({ data: stores });
+    const userStoresRole = await userRoleModel.findUserRoles(res.locals.userId);
+    const ownStoreRole = userStoresRole.filter((ele) => ele.role_id === 1);
+    const ownStoreIds = ownStoreRole.map((ele) => ele.store_id);
+    const data = stores.reduce((obj: any, ele) => {
+      if (!obj["own"] || !obj["other"]) {
+        obj["own"] = [];
+        obj["other"] = [];
+      }
+      if (ownStoreIds.includes(ele.id)) obj["own"].push(ele);
+      else obj["other"].push(ele);
+      return obj;
+    }, {});
+    res.status(200).json({ data });
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ errors: err.message });

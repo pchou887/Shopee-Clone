@@ -2,12 +2,13 @@
 @import "./header.css";
 @import "./home.css";
 @import "./product.css";
-/* @import "./order.css"; */
 @import "./store.css";
 @import "./login.css";
 @import "./cart.css";
 @import "./neworder.css";
 @import "./storeSpace.css";
+@import "./customer.css";
+@import "./chat.css";
 * {
   margin: 0;
   padding: 0;

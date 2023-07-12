@@ -269,6 +269,8 @@ export const updateProduct = async (req: Request, res: Response) => {
 
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
+    const productId = Number(req.params.id);
+    await productModel.setProductIsRemove(productId);
     res.status(200).json({ data: { message: "success" } });
   } catch (err) {
     if (err instanceof Error) res.json({ errors: err.message });

@@ -8,13 +8,18 @@ import * as orderModel from "../models/order.js";
 import * as orderDetailModel from "../models/orderDetail.js";
 import * as userInfoModel from "../models/userInfo.js";
 import * as redisModel from "../models/redis.js";
-import { getProductsByIds } from "../models/product.js";
+import {
+  getProductsByIds,
+  getOrderProductsByStoreId,
+} from "../models/product.js";
 import {
   getProductVariantsById,
+  getProductVariantsByProductVariantIds,
   getVariantsStockWithLock,
   updateVariantsStock,
 } from "../models/productVariant.js";
 import { ValidationError } from "../utils/errorHandler.js";
+import { getProductMainImage } from "../models/productImage.js";
 
 dotenv.config();
 
@@ -367,3 +372,153 @@ export async function snapUpCheckout(req: Request, res: Response) {
     connection.release();
   }
 }
+
+interface VariantWithImageShema {
+  id: number;
+  name: string;
+  varaintId: number;
+  kind: string;
+  price: number;
+  image: string;
+}
+interface OrderListVariantSchema extends VariantWithImageShema {
+  qty: number;
+}
+
+interface OrderSchema {
+  order_id: number;
+  payment: "cash" | "credit_card" | "ATM";
+  freight: number;
+  subtotal: number;
+  total: number;
+  recipient: string;
+  address: string;
+  phone: string;
+  product_id: number;
+  variant_id: number;
+  qty: number;
+}
+
+interface UserOrdersSchema {
+  order_id: number;
+  payment: "cash" | "credit_card" | "ATM";
+  freight: number;
+  subtotal: number;
+  total: number;
+  recipient: string;
+  address: string;
+  phone: string;
+  order_list: OrderListVariantSchema[];
+}
+
+const groupOrderList = (
+  variants: {
+    id: number;
+    product_id: number;
+    kind: string;
+    stock: number;
+    price: number;
+  }[],
+  productImages: {
+    product_id: number;
+    path: string;
+    type: string;
+    mimetype: string;
+  }[],
+  orders: OrderSchema[],
+  products: {
+    id: number;
+    name: string;
+  }[]
+): UserOrdersSchema[] => {
+  const productName = products.reduce(
+    (obj: { [productId: number]: string }, ele) => {
+      obj[ele.id] = ele.name;
+      return obj;
+    },
+    {}
+  );
+  const imageObj = productImages.reduce(
+    (obj: { [productId: number]: string }, ele) => {
+      obj[ele.product_id] = `https://d1a26cbu5iquck.cloudfront.net/${ele.path}`;
+      return obj;
+    },
+    {}
+  );
+  const varaintObj = variants.reduce(
+    (obj: { [variantId: number]: VariantWithImageShema }, ele) => {
+      obj[ele.id] = {
+        id: ele.product_id,
+        name: productName[ele.product_id],
+        varaintId: ele.id,
+        kind: ele.kind,
+        price: ele.price,
+        image: imageObj[ele.product_id],
+      };
+      return obj;
+    },
+    {}
+  );
+  const orderVariantQty = orders.reduce(
+    (obj: { [variantId: number]: number }, ele) => {
+      obj[ele.variant_id] = ele.qty;
+      return obj;
+    },
+    {}
+  );
+  const orderVariant = orders.reduce(
+    (obj: { [orderId: number]: OrderListVariantSchema[] }, ele) => {
+      if (!obj[ele.order_id]) obj[ele.order_id] = [];
+      obj[ele.order_id].push({
+        ...varaintObj[ele.variant_id],
+        qty: orderVariantQty[ele.variant_id],
+      });
+      return obj;
+    },
+    {}
+  );
+  const orderObj = orders.reduce(
+    (obj: { [orderId: number]: UserOrdersSchema }, ele) => {
+      if (obj[ele.order_id]) return obj;
+      obj[ele.order_id] = {
+        order_id: ele.order_id,
+        payment: ele.payment,
+        freight: ele.freight,
+        subtotal: ele.subtotal,
+        total: ele.total,
+        recipient: ele.recipient,
+        address: ele.address,
+        phone: ele.phone,
+        order_list: orderVariant[ele.order_id],
+      };
+      return obj;
+    },
+    {}
+  );
+  return Object.values(orderObj).reverse();
+};
+
+export const getStoreUserOrders = async (req: Request, res: Response) => {
+  try {
+    const storeId = Number(req.params.storeId);
+    const userId = Number(req.params.userId);
+    const orders = await orderModel.findOrderByUserId(userId);
+    const orderProductIds = orders.map((ele) => ele.product_id);
+    const orderVaraintIds = orders.map((ele) => ele.variant_id);
+    const products = await getOrderProductsByStoreId(orderProductIds, storeId);
+    const storeOrderProductIds = products.map((ele) => ele.id);
+    const variants = await getProductVariantsByProductVariantIds(
+      storeOrderProductIds,
+      orderVaraintIds
+    );
+    const productsMainImage = await getProductMainImage(storeOrderProductIds);
+    const data = groupOrderList(variants, productsMainImage, orders, products);
+    res.status(200).json({ data });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(400).json({ errors: err.message });
+      return;
+    }
+    res.status(500).json({ errors: "something wrong" });
+  }
+};

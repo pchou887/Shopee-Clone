@@ -1,5 +1,5 @@
-import { useState, useLayoutEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useLayoutEffect, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import StoreMenu from "../components/Stores/StoreMenu";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
@@ -7,8 +7,11 @@ import checkRoles from "../utils/checkRole";
 import StoreProduct from "../components/Stores/StoreProduct";
 import CreateProduct from "../components/Stores/CreateProduct";
 import StoreStaff from "../components/Stores/StoreStaff";
+import CustomerService from "../components/Stores/CustomerService";
+import CreateStaff from "../components/Stores/CreateStaff";
 
 function Store() {
+  const userData = JSON.parse(localStorage.getItem("user")).user;
   const storeId = useParams("id");
   const [menu, setMenu] = useState("");
   const [products, setProducts] = useState("");
@@ -26,6 +29,7 @@ function Store() {
   const navigate = useNavigate();
   const onClick = (e) => {
     setMenu(e.key);
+    console.log(e.key);
     setActiveStaff(null);
     setTargetStaff("");
     setActiveRole(null);
@@ -82,6 +86,18 @@ function Store() {
               targetStaff={targetStaff}
               setTargetStaff={setTargetStaff}
             />
+          )}
+          {menu === "6" && (
+            <CreateStaff
+              storeId={Number(storeId.id)}
+              activeRole={activeRole}
+              setActiveRole={setActiveRole}
+              targetRole={targetRole}
+              setTargetRole={setTargetRole}
+            />
+          )}
+          {menu === "customer" && (
+            <CustomerService storeId={storeId.id} staffId={userData.id} />
           )}
         </div>
       </div>

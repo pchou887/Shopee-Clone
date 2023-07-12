@@ -1,10 +1,10 @@
-import { NextFunction, Router } from "express";
+import { Router } from "express";
 import { body, param } from "express-validator";
 import {
   getUserRoles,
   addUserRole,
   updateUserRole,
-  deleteUserRole,
+  deleteUserRoles,
 } from "../controllers/role.js";
 import {
   createStore,
@@ -52,7 +52,7 @@ router
   .post([
     param("storeId").not().isEmpty().trim().isInt(),
     body("role_id").not().isEmpty().trim().isInt(),
-    body("user_id").not().isEmpty().trim().isInt(),
+    body("email").not().isEmpty().trim().isEmail(),
     validator.handleResult,
     authenticate,
     authorization.addStaffPermission,
@@ -95,10 +95,9 @@ router
   .delete([
     param("storeId").not().isEmpty().trim().isInt(),
     param("userId").not().isEmpty().trim().isInt(),
-    body("roleId").not().isEmpty().trim().isInt(),
     validator.handleResult,
     authenticate,
     authorization.checkRolesPermission,
-    deleteUserRole,
+    deleteUserRoles,
   ]);
 export default router;

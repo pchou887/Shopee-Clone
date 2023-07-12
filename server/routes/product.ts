@@ -84,7 +84,13 @@ router.route("/product/insert").post([
 router.route("/product/update").put(updateProduct);
 
 router
-  .route("/product/delete")
-  .delete([authenticate, authorization.checkProductPermission, deleteProduct]);
+  .route("/product/:id/delete")
+  .delete([
+    param("id").not().isEmpty().trim(),
+    validator.handleResult,
+    authenticate,
+    authorization.checkProductPermission,
+    deleteProduct,
+  ]);
 
 export default router;

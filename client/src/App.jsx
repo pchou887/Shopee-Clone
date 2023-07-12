@@ -11,6 +11,8 @@ import Profile from "./pages/Profile";
 import Product from "./pages/Product";
 import Order from "./pages/Order";
 import StoreProducts from "./pages/StoreProduct";
+import CustomerService from "./pages/CustomerService";
+import CreateStore from "./pages/CreateStore";
 
 function App() {
   return (
@@ -26,8 +28,13 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/stores" element={<Stores />} />
           <Route path="/order" element={<Order />} />
+          <Route path="/store/create" element={<CreateStore />} />
           <Route path="/store/:id" element={<Store />} />
           <Route path="/store/:id/product" element={<StoreProducts />} />
+          <Route
+            path="/store/:id/staff/:staffId/chat"
+            element={<CustomerService />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

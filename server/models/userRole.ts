@@ -97,13 +97,9 @@ export const updateUserRole = async (
   );
 };
 
-export const deleteUserRole = async (
-  userId: number,
-  storeId: number,
-  roleId: number[]
-) => {
+export const deleteUserRoles = async (userId: number, storeId: number) => {
   await pool.query(
-    `DELETE FROM user_roles WHERE user_id = ? AND store_id = ? AND role_id IN (?)`,
-    [userId, storeId, roleId]
+    `DELETE FROM user_roles WHERE user_id = ? AND store_id = ?`,
+    [userId, storeId]
   );
 };

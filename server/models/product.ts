@@ -39,8 +39,8 @@ export async function getProducts({
     SELECT id, store_id, category, name, description FROM products
     ${
       CategorySchema.safeParse(category).success
-        ? `WHERE category = "${category}"`
-        : ""
+        ? `WHERE category = "${category}" AND is_remove = false`
+        : "WHERE is_remove = false"
     }
     ORDER BY id DESC
     LIMIT ? OFFSET ?
@@ -55,7 +55,7 @@ export async function getProduct(id: number) {
   const results = await pool.query(
     `
     SELECT id, store_id, category, name, description FROM products
-    WHERE id = ?
+    WHERE id = ? AND is_remove = false
   `,
     [id]
   );
@@ -73,7 +73,7 @@ export async function searchProducts({
   const results = await pool.query(
     `
     SELECT id, store_id, category, name, description FROM products
-    WHERE name LIKE ?
+    WHERE name LIKE ? AND is_remove = false
     ORDER BY id DESC
     LIMIT ? OFFSET ?
   `,
@@ -106,8 +106,8 @@ export async function countProducts({
   FROM products
   ${
     CategorySchema.safeParse(category).success
-      ? `WHERE category = "${category}"`
-      : ""
+      ? `WHERE category = "${category}" AND is_remove = false`
+      : "WHERE is_remove = false"
   }
   ${typeof keyword === "string" ? `WHERE name LIKE ?` : ""}
 `,
@@ -122,7 +122,7 @@ export async function countProducts({
 
 export async function countStoreProducts({ storeId }: { storeId: number }) {
   const results = await pool.query(
-    `SELECT COUNT(id) AS count FROM products WHERE store_id = ?`,
+    `SELECT COUNT(id) AS count FROM products WHERE store_id = ? AND is_remove = false`,
     [storeId]
   );
   if (Array.isArray(results[0]) && instanceOfProductCount(results[0][0])) {
@@ -164,7 +164,7 @@ export async function isProductExist(productId: number) {
   const results = await pool.query(
     `
     SELECT COUNT(id) AS count FROM products
-    WHERE id = ?
+    WHERE id = ? AND is_remove = false
   `,
     [productId]
   );
@@ -184,7 +184,7 @@ export async function getProductsByIds(ids: number[]) {
   const results = await pool.query(
     `
     SELECT id, name FROM products
-    WHERE id IN (?)
+    WHERE id IN (?) AND is_remove = false
   `,
     [ids]
   );
@@ -203,7 +203,7 @@ export const updateProduct = async (productData: {
   await pool.query(
     `
     UPDATE products SET category = ?, name = ?, description = ?
-    WHERE id = ? AND store_id = ?
+    WHERE id = ? AND store_id = ? AND is_remove = false
   `,
     [category, name, description, id, storeId]
   );
@@ -219,7 +219,7 @@ export async function getStoreProducts({
   const results = await pool.query(
     `
     SELECT id, store_id, category, name, description FROM products
-    WHERE store_id = ?
+    WHERE store_id = ? AND is_remove = false
     ORDER BY id DESC
     LIMIT ? OFFSET ?
   `,
@@ -228,3 +228,21 @@ export async function getStoreProducts({
   const products = z.array(ProductSchema).parse(results[0]);
   return products;
 }
+
+export const getOrderProductsByStoreId = async (
+  productIds: number[],
+  storeId: number
+) => {
+  const results = await pool.query(
+    `SELECT id, name FROM products WHERE id IN (?) AND store_id = ? AND is_remove = false`,
+    [productIds, storeId]
+  );
+  const products = z.array(PartialProductSchema).parse(results[0]);
+  return products;
+};
+
+export const setProductIsRemove = async (productId: number) => {
+  await pool.query(`UPDATE products SET is_remove = true WHERE id = ?`, [
+    productId,
+  ]);
+};

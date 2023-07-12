@@ -112,3 +112,31 @@ export const checkOrderExistByUserProductId = async (
   }
   return false;
 };
+
+const OrderSchema = z.object({
+  order_id: z.number(),
+  payment: z.enum(["cash", "credit_card", "ATM"]),
+  freight: z.number(),
+  subtotal: z.number(),
+  total: z.number(),
+  recipient: z.string(),
+  address: z.string(),
+  phone: z.string(),
+  product_id: z.number(),
+  variant_id: z.number(),
+  qty: z.number(),
+});
+
+export const findOrderByUserId = async (userId: number) => {
+  const result = await pool.query(
+    `
+    SELECT order_id, payment, freight, subtotal, total, recipient, address, phone, product_id, variant_id, qty
+    FROM \`order\` INNER JOIN order_list ON \`order\`.id = order_list.order_id
+    WHERE buyer_id = ? ORDER BY order_id DESC
+  `,
+    [userId]
+  );
+  const order = z.array(OrderSchema).parse(result[0]);
+
+  return order;
+};

@@ -75,6 +75,23 @@ export async function getProductVariantsById(varaintIds: number[]) {
   return productVariants;
 }
 
+export async function getProductVariantsByProductVariantIds(
+  productIds: number[],
+  varaintIds: number[]
+) {
+  if (varaintIds.length === 0) return [];
+  const result = await pool.query(
+    `
+    SELECT id, product_id, kind, stock, price
+    FROM product_variants
+    WHERE product_id IN (?) AND id IN (?)
+  `,
+    [productIds, varaintIds]
+  );
+  const productVariants = z.array(ProductVariantSchema).parse(result[0]);
+  return productVariants;
+}
+
 export function groupVariants(productVariants: ProductVariant[]) {
   const result = productVariants.reduce(function (
     obj: {

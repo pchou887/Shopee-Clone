@@ -1,12 +1,12 @@
 import { Schema, model } from "mongoose";
 
-interface IMessage {
+export interface IMessage {
   from: number;
   content: string;
   timestamp: Date;
 }
 
-interface IChatHistory {
+export interface IChatHistory {
   user_id: number;
   store_id: number;
   toUserUnread: number;

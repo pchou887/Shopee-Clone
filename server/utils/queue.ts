@@ -38,6 +38,7 @@ const userToOrderPage = async () => {
           variantId: userOrder.variantId,
           expire: expireTime,
         };
+        await redisModel.decrStr("queueLength");
         pubsubClient.publish("turn-to", JSON.stringify(data));
       } else {
         await sleep(1000);

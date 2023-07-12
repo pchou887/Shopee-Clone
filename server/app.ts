@@ -78,28 +78,37 @@ io.on("connection", (socket) => {
     );
 
     await redisModel.setZset("servedNumber", 0, `${storeId}:${userId}`);
-    socket.join(`${storeId}`);
+    socket.join(`storeChat:${storeId}`);
     socket.join(`${storeId}:${userId}`);
-    io.to("admin").emit("staffOnline", { data: userId });
+    io.to(`manager:${storeId}`).emit("staffOnline", { data: userId });
   });
 
-  socket.on("userJoin", async ({ userId, storeId }) => {
+  socket.on("userJoin", async ({ userId, storeId, picture, userName }) => {
     const roomName = `store_${storeId}-user_${userId}`;
+    socket.join(`userChat:${userId}`);
     socket.join(roomName);
     const staffServedNumber = await redisModel.getZset("servedNumber");
     const storeStaff = staffServedNumber.filter((ele) =>
       ele.includes(`${storeId}:`)
     );
     const chat =
-      (await Chat.findOne({ user_id: userId, store_id: storeId })) ??
-      new Chat({ user_id: userId, store_id: storeId, message: [] });
-    await chat.save();
-    if (storeStaff.length)
-      io.to(storeStaff[0]).emit("hasCustomer", {
-        room: roomName,
-        userId,
-        storeId,
+      (await Chat.findOne({
+        user_id: Number(userId),
+        store_id: Number(storeId),
+      })) ??
+      new Chat({
+        user_id: Number(userId),
+        store_id: Number(storeId),
+        message: [],
       });
+    await chat.save();
+    io.to(`storeChat:${storeId}`).emit("hasCustomer", {
+      room: roomName,
+      userId,
+      storeId,
+      picture,
+      userName,
+    });
   });
 
   socket.on("customerService", async ({ room, storeId, userId }) => {
@@ -132,7 +141,7 @@ io.on("connection", (socket) => {
         timestamp: time,
       });
       await chat?.save();
-      io.to(`store_${storeId}-user_${userId}`).emit("toUser", {
+      io.to(`userChat:${userId}`).emit("toUser", {
         from,
         userId,
         storeId,
@@ -157,7 +166,7 @@ io.on("connection", (socket) => {
         timestamp: time,
       });
       await chat?.save();
-      io.to(`store_${storeId}-user_${userId}`).emit("toStore", {
+      io.to(`storeChat:${storeId}`).emit("toStore", {
         from,
         userId,
         storeId,

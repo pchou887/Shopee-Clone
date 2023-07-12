@@ -82,21 +82,17 @@ export const updateUserRole = async (req: Request, res: Response) => {
     res.status(500).json({ errors: "something wrong" });
   }
 };
-export const deleteUserRole = async (req: Request, res: Response) => {
+export const deleteUserRoles = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.params.userId);
     if (userId === res.locals.userId)
       throw new Error("can not change own role");
     const storeId = Number(req.params.storeId);
-    const roleId: number[] = Array.isArray(req.body.role_id)
-      ? req.body.roleId.map((ele: string) => Number(ele))
-      : [Number(req.body.roleId)];
-    await userRoleModel.deleteUserRole(userId, storeId, roleId);
+    await userRoleModel.deleteUserRoles(userId, storeId);
     res.status(200).json({
       data: {
         userId,
         storeId,
-        roleId,
       },
     });
   } catch (err) {

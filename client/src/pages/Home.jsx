@@ -3,9 +3,11 @@ import ShowProducts from "../components/ShowProducts";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
 import Carousels from "../components/AntUtils/Carousel";
+import UserChat from "../components/UserChat";
 
 function Home() {
   const [products, setProducts] = useState([]);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     async function getProduct() {
       try {
@@ -42,6 +44,18 @@ function Home() {
         </div>
         <ShowProducts products={products} />
       </div>
+      {open ? (
+        <UserChat open={open} setOpen={setOpen} />
+      ) : (
+        <div className="chat-area-icon" onClick={() => setOpen(!open)}>
+          <img
+            src="https://d1a26cbu5iquck.cloudfront.net/icon/chat.png"
+            alt=""
+            className="chat-area-icon-img"
+          />
+          聊聊
+        </div>
+      )}
     </>
   );
 }

@@ -6,6 +6,9 @@ import api from "../utils/api";
 import toastMessage from "../utils/toast";
 import ProductConponent from "../components/Product";
 
+const SOCKET_URL =
+  import.meta.env.VITE_DEV_SNAPUP_SOCKET || "https://api.hyperushle.com";
+
 function Product() {
   const snapup = true;
   const [variantId, setVariantId] = useState("");
@@ -13,7 +16,9 @@ function Product() {
   const [store, setStore] = useState("");
   const [stock, setStock] = useState("");
   const [amount, setAmount] = useState(1);
-  const socket = io("https://socket.hyperushle.com");
+  const socket = io(SOCKET_URL, {
+    transports: ["websocket"],
+  });
   const navigate = useNavigate();
   socket.on("wait", (data) => {
     toastMessage.warn("現在人數眾多請稍待片刻");

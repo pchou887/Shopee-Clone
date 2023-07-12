@@ -60,3 +60,15 @@ export const findUserById = async (id: number) => {
   const users = z.array(UserSchema).parse(results[0]);
   return users[0];
 };
+
+export const findUserByIds = async (id: number[]) => {
+  const results = await pool.query(
+    `
+    SELECT * FROM users
+    WHERE id IN (?)
+  `,
+    [id]
+  );
+  const users = z.array(UserSchema).parse(results[0]);
+  return users;
+};

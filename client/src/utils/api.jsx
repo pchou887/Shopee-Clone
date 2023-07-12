@@ -153,5 +153,101 @@ const api = {
     const result = await response.json();
     return result;
   },
+  GetStoreChat: async (storeId, token) => {
+    const response = await fetch(
+      `${hostName}${version}/store/${storeId}/chat/users/message`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
+  GetStoreChatMessage: async (storeId, userId, token) => {
+    const response = await fetch(
+      `${hostName}${version}/store/${storeId}/chat/user/${userId}/message`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
+  GetStoreUserOrders: async (storeId, userId, token) => {
+    const response = await fetch(
+      `${hostName}${version}/store/${storeId}/user/${userId}/orders`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
+  GetUserChat: async (token) => {
+    const response = await fetch(`${hostName}${version}/chats`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const result = await response.json();
+    return result;
+  },
+  GetUserChatMessage: async (token, storeId) => {
+    const response = await fetch(
+      `${hostName}${version}/chat/${storeId}/message`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
+  CreateStore: async (name, city, district, token) => {
+    const response = await fetch(`${hostName}${version}/store`, {
+      method: "POST",
+      headers: new Headers({
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify({
+        name,
+        city,
+        district,
+      }),
+    });
+    const result = await response.json();
+    return result;
+  },
+  CreateStaff: async (email, storeId, role, token) => {
+    const response = await fetch(
+      `${hostName}${version}/store/${storeId}/user`,
+      {
+        method: "POST",
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({
+          email,
+          role_id: role,
+        }),
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
 };
 export default api;

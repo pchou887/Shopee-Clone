@@ -1,7 +1,5 @@
-import path from "path";
-import fs from "fs";
 import express from "express";
-import { createServer } from "https";
+import { createServer } from "http";
 import { Server } from "socket.io";
 import * as redisModel from "./redis.js";
 import verifyJWT from "./verifyJWT.js";
@@ -9,21 +7,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "./private.key";
-const CERTIFICATE_CRT = process.env.CERTIFICATE_CRT || "./cert.crt";
-
-const __dirnamePrivate = path.resolve(PRIVATE_KEY).replace(/\\/g, "/");
-const __dirnameCertificate = path.resolve(CERTIFICATE_CRT).replace(/\\/g, "/");
-
 const PORT = 8080;
 const app = express();
-const server = createServer(
-  {
-    key: fs.readFileSync(__dirnamePrivate),
-    cert: fs.readFileSync(__dirnameCertificate),
-  },
-  app
-);
+const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -41,9 +27,10 @@ io.on("connection", (socket) => {
       const decoded = await verifyJWT(token);
       const userId = decoded.userId;
       socket.join(`buy:${userId}`);
-      const queue = await redisModel.getZset(`queue`);
+      const queueLength = await redisModel.incrStr("queueLength");
       const isOrder = await redisModel.getStr(`userOrder:${userId}`);
-      if (queue.length > 100 && isOrder) {
+      if (queueLength > 500 || isOrder) {
+        await redisModel.decrStr("queueLength");
         throw new Error(
           "Too many people. Please try again after a few minutes."
         );

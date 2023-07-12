@@ -84,3 +84,16 @@ export function groupImages(productImages: ProductImage[]) {
   }, {});
   return result;
 }
+
+export const getProductMainImage = async (productIds: number[]) => {
+  const result = await pool.query(
+    `
+    SELECT product_id, path, type, mimetype
+    FROM product_images
+    WHERE product_id IN (?) AND type = "main_image"
+  `,
+    [productIds]
+  );
+  const productImages = z.array(ProductImageSchema).parse(result[0]);
+  return productImages;
+};

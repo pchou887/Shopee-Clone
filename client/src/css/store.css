@@ -82,14 +82,10 @@
   color: #e8e8e8;
   border: #eff6ee solid 1px;
 }
-#fade {
-  animation: fade 2s linear 0s infinite;
-}
-@keyframes fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.own-store-area-title,
+.other-store-area-title {
+  padding: 20px;
+  font-size: 30px;
+  font-weight: 500;
+  color: #ee4d2d;
 }
