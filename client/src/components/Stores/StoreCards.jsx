@@ -1,7 +1,11 @@
 import { Card, Space } from "antd";
 
 const Cards = ({ data }) => (
-  <Space direction="vertical" size={16}>
+  <Space
+    direction="vertical"
+    size={16}
+    style={{ display: "flex", flexWrap: "wrap", flexDirection: "row" }}
+  >
     {data.map((ele) => (
       <Card
         key={`store-${ele.id}`}

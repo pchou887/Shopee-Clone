@@ -116,31 +116,24 @@ function Order({ products, recipient, setRecipient, checkoutSubmit }) {
               <h3 style={{ fontWeight: 500 }}>付款方式</h3>
             </div>
             <div className="paymentWay">
-              {/* <div
-                className={`select-btn ${
-                  payment === 1 ? `select-btn-active` : ""
-                }`}
-                onClick={() => setPayment(1)}
-              >
-                貨到付款
-              </div> */}
               <div
                 className={`select-btn ${
                   payment === 1 ? `select-btn-active` : ""
                 }`}
-                onClick={() => setPayment(2)}
+                onClick={() => (payment === 1 ? setPayment(0) : setPayment(1))}
               >
                 信用卡/金融卡
               </div>
+              {/* <div
+                className={`select-btn ${
+                  payment === 2 ? `select-btn-active` : ""
+                }`}
+                onClick={() => setPayment(2)}
+              >
+                貨到付款
+              </div> */}
             </div>
           </div>
-          {/* {payment === 1 && (
-            <div className="payment-cash">
-              <div className="payment-title">貨到付款</div>
-              <div>現付</div>
-            </div>
-          )} */}
-
           {payment === 1 && (
             <form ref={formRef}>
               <div className="order-tappay">
@@ -168,7 +161,12 @@ function Order({ products, recipient, setRecipient, checkoutSubmit }) {
               </div>
             </form>
           )}
-
+          {/* {payment === 2 && (
+            <div className="payment-cash">
+              <div className="payment-title">貨到付款</div>
+              <div>現付</div>
+            </div>
+          )} */}
           <div className="payment-total">
             <div className="payment-total-price">
               <div className="payment-total-title">商品總金額：</div>

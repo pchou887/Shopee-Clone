@@ -16,11 +16,10 @@ function SignIn() {
       localStorage.removeItem("jwtToken");
       localStorage.removeItem("user");
       localStorage.setItem("jwtToken", result.data.access_token);
-      localStorage.setItem("user", JSON.stringify(result.data));
-      toastMessage.success("Welecome!");
+      localStorage.setItem("user", JSON.stringify(result.data.user));
+      toastMessage.success("Welcome!");
       return navigate("/");
     } catch (err) {
-      console.log(err);
       toastMessage.error(err.message);
     }
   }

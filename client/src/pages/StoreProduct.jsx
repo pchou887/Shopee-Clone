@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import api from "../utils/api";
 import ShowProducts from "../components/ShowProducts";
-import { useParams } from "react-router-dom";
+import UserChat from "../components/UserChat";
 
 function StoreProduct() {
-  const storeId = useParams("id");
+  const { id } = useParams();
   const [products, setProducts] = useState("");
   const [store, setStore] = useState("");
+  const [open, setOpen] = useState(false);
+  const [storeChat, setStoreChat] = useState("");
   useEffect(() => {
     async function getStore() {
       try {
-        const storeProducts = await api.GetStoreProducts(storeId.id);
-        const storeResult = await api.GetProductStore(storeId.id);
+        const storeProducts = await api.GetStoreProducts(id);
+        const storeResult = await api.GetProductStore(id);
         if (storeProducts.errors || storeResult.errors)
           throw new Error(storeProducts.errors);
         setProducts(storeProducts.data);
@@ -41,7 +44,15 @@ function StoreProduct() {
                     />
                     <h1 className="shop-space-user-name">{store.name}</h1>
                   </div>
-                  <div className="shop-space-chat-btn">聊聊</div>
+                  <div
+                    className="shop-space-chat-btn"
+                    onClick={() => {
+                      setOpen(true);
+                      setStoreChat({ storeId: id, storeName: store.name });
+                    }}
+                  >
+                    聊聊
+                  </div>
                 </div>
                 <div className="shop-space-user-info-other">
                   <div className="shop-space-user-info-other-items">
@@ -99,6 +110,29 @@ function StoreProduct() {
         </div>
         <ShowProducts products={products} />
       </div>
+      {open ? (
+        <UserChat
+          open={open}
+          setOpen={setOpen}
+          storeChat={storeChat}
+          setStoreChat={setStoreChat}
+        />
+      ) : (
+        <div
+          style={{
+            display: `${localStorage.getItem("user") ? "fixed" : "none"}`,
+          }}
+          className="chat-area-icon"
+          onClick={() => setOpen(!open)}
+        >
+          <img
+            src="https://d1a26cbu5iquck.cloudfront.net/icon/chat.png"
+            alt=""
+            className="chat-area-icon-img"
+          />
+          聊聊
+        </div>
+      )}
     </>
   );
 }

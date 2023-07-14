@@ -1,67 +1,102 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../utils/api";
 
-const SOCKET_URL = import.meta.env.VITE_DEV_HOST_NAME;
-const socket = io(SOCKET_URL);
+const URL = import.meta.env.VITE_DEV_HOST_NAME || "";
 
-function UserChat({ open, setOpen }) {
-  const user = JSON.parse(localStorage.getItem("user")).user;
+function UserChat({ open, setOpen, storeChat, setStoreChat }) {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const [socket] = useState(() => io(URL));
   const messageContainerRef = useRef(null);
   const [chats, setChats] = useState("");
   const [message, setMessage] = useState("");
   const [chatRoom, setChatRoom] = useState("");
   const [chatStoreId, setChatStoreId] = useState("");
-  if (chatStoreId)
-    socket.emit("userJoin", {
-      userId: user.id,
-      storeId: chatStoreId,
-      picture: user.picture,
-      userName: user.name,
-    });
-  socket.on("toUser", (data) => {
-    if (data.from === chatStoreId) {
-      setChatRoom([...chatRoom, { from: data.from, content: data.message }]);
-    } else if (!chats.some((ele) => ele.storeId === data.storeId)) {
-      setChats([
-        {
-          storeId: data.storeId,
-          storeName: data.storeName,
-          message: data.message,
-        },
-        ...chats,
-      ]);
-    } else {
-      const updateChat = chats.filter((ele) => ele.storeId !== data.storeId);
-      setChats([
-        {
-          storeId: data.storeId,
-          storeName: data.storeName,
-          message: data.message,
-        },
-        ...updateChat,
-      ]);
-    }
-  });
+  const navigate = useNavigate();
   useEffect(() => {
-    socket.connect();
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-  useEffect(() => {
+    socket.emit("userConnect", { userId: user.id });
     const token = localStorage.getItem("jwtToken");
     async function getChats() {
-      const result = await api.GetUserChat(token);
-      setChats(result.data);
+      try {
+        const result = await api.GetUserChat(token);
+        if (result.errors) throw new Error(result.errors);
+        if (
+          storeChat &&
+          result.data.some((ele) => ele.storeId == storeChat.storeId)
+        ) {
+          const remainChat = result.data.filter(
+            (ele) => ele.storeId != storeChat.storeId
+          );
+          setChats([storeChat, ...remainChat]);
+          setStoreChat("");
+        } else if (
+          storeChat &&
+          !result.data.some((ele) => ele.storeId == storeChat.storeId)
+        ) {
+          setChats([storeChat, ...result.data]);
+          setStoreChat("");
+        } else {
+          setChats(result.data);
+        }
+      } catch (err) {
+        if (err.message.includes("jwt")) {
+          localStorage.removeItem("jwtToken");
+          localStorage.removeItem("user");
+          return navigate("/login");
+        }
+      }
     }
     getChats();
   }, []);
   useEffect(() => {
+    socket.on("toUser", (data) => {
+      if (data.from === chatStoreId) {
+        setChatRoom([...chatRoom, { from: data.from, content: data.message }]);
+        setTimeout(() => {
+          messageContainerRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+          });
+        }, 0);
+      } else if (!chats.some((ele) => ele.storeId === data.storeId)) {
+        setChats([
+          {
+            storeId: data.storeId,
+            storeName: data.storeName,
+            message: data.message,
+          },
+          ...chats,
+        ]);
+      } else {
+        const updateChat = chats.filter((ele) => ele.storeId !== data.storeId);
+        setChats([
+          {
+            storeId: data.storeId,
+            storeName: data.storeName,
+            message: data.message,
+          },
+          ...updateChat,
+        ]);
+      }
+    });
+    return () => {
+      socket.off("toUser");
+    };
+  }, [chats, chatStoreId, chatRoom]);
+
+  useEffect(() => {
     const token = localStorage.getItem("jwtToken");
     async function getChatMessage() {
       const result = await api.GetUserChatMessage(token, chatStoreId);
+
       setChatRoom(result.data.message);
+      setTimeout(() => {
+        messageContainerRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }, 0);
     }
     getChatMessage();
   }, [chatStoreId]);
@@ -72,17 +107,18 @@ function UserChat({ open, setOpen }) {
     socket.emit("toStore", {
       from: user.id,
       userId: user.id,
+      userName: user.name,
       storeId: chatStoreId,
+      picture: user.picture,
       message,
     });
-    scrollToLatestMessage();
+    setTimeout(() => {
+      messageContainerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 0);
   }
-  const scrollToLatestMessage = () => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop =
-        messageContainerRef.current.scrollHeight;
-    }
-  };
   return (
     <>
       <div className="chat-area">
@@ -132,7 +168,7 @@ function UserChat({ open, setOpen }) {
           </div>
           {chatStoreId && (
             <div className="chat-area-content-room-space">
-              <div className="chat-area-content-room" ref={messageContainerRef}>
+              <div className="chat-area-content-room">
                 {chatRoom &&
                   chatRoom.map((ele, index) =>
                     user.id === ele.from ? (
@@ -145,6 +181,7 @@ function UserChat({ open, setOpen }) {
                       </div>
                     )
                   )}
+                <div ref={messageContainerRef}></div>
               </div>
               <div className="chat-area-content-room-input">
                 <input

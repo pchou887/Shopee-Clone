@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toastMessage from "../../utils/toast";
 import api from "../../utils/api";
 
 const SignUp = () => {
@@ -15,10 +16,11 @@ const SignUp = () => {
       localStorage.removeItem("jwtToken");
       localStorage.removeItem("user");
       localStorage.setItem("jwtToken", result.data.access_token);
-      localStorage.setItem("user", result.data);
+      localStorage.setItem("user", JSON.stringify(result.data.user));
+      toastMessage.success("Welcome!");
       return navigate("/");
     } catch (err) {
-      console.log(err);
+      toastMessage.error(err);
     }
   };
   return (

@@ -1,5 +1,5 @@
-import { useState, useLayoutEffect, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useState, useLayoutEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import StoreMenu from "../components/Stores/StoreMenu";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
@@ -9,10 +9,11 @@ import CreateProduct from "../components/Stores/CreateProduct";
 import StoreStaff from "../components/Stores/StoreStaff";
 import CustomerService from "../components/Stores/CustomerService";
 import CreateStaff from "../components/Stores/CreateStaff";
+import DeleteStaff from "../components/Stores/DeleteStaff";
 
 function Store() {
-  const userData = JSON.parse(localStorage.getItem("user")).user;
-  const storeId = useParams("id");
+  const userData = JSON.parse(localStorage.getItem("user"));
+  const { id } = useParams();
   const [menu, setMenu] = useState("");
   const [products, setProducts] = useState("");
   const [staff, setStaff] = useState("");
@@ -28,8 +29,9 @@ function Store() {
   });
   const navigate = useNavigate();
   const onClick = (e) => {
+    if (e.key === "customer")
+      navigate(`/store/${id}/staff/${userData.id}/chat`);
     setMenu(e.key);
-    console.log(e.key);
     setActiveStaff(null);
     setTargetStaff("");
     setActiveRole(null);
@@ -39,9 +41,9 @@ function Store() {
     const token = localStorage.getItem("jwtToken");
     async function getStore() {
       try {
-        const storeProducts = await api.GetStoreProducts(storeId.id);
-        const storeOwnRole = await api.GetStoreOwnRole(storeId.id, token);
-        const storeStaff = await api.GetStoreStaff(storeId.id, token);
+        const storeProducts = await api.GetStoreProducts(id);
+        const storeOwnRole = await api.GetStoreOwnRole(id, token);
+        const storeStaff = await api.GetStoreStaff(id, token);
         const errors =
           storeStaff.errors || storeOwnRole.errors || storeProducts.errors;
         if (errors) throw new Error(errors);
@@ -72,11 +74,11 @@ function Store() {
         <div className="store">
           <StoreMenu onClick={onClick} roles={roles} />
           {menu === "1" && products && <StoreProduct products={products} />}
-          {menu === "2" && <CreateProduct storeId={Number(storeId.id)} />}
+          {menu === "2" && <CreateProduct storeId={Number(id)} />}
           {menu === "5" && (
             <StoreStaff
               data={staff}
-              storeId={Number(storeId.id)}
+              storeId={Number(id)}
               activeStaff={activeStaff}
               setActiveStaff={setActiveStaff}
               activeRole={activeRole}
@@ -89,15 +91,25 @@ function Store() {
           )}
           {menu === "6" && (
             <CreateStaff
-              storeId={Number(storeId.id)}
+              storeId={Number(id)}
               activeRole={activeRole}
               setActiveRole={setActiveRole}
               targetRole={targetRole}
               setTargetRole={setTargetRole}
             />
           )}
+          {menu === "7" && (
+            <DeleteStaff
+              data={staff}
+              storeId={Number(id)}
+              activeStaff={activeStaff}
+              setActiveStaff={setActiveStaff}
+              targetStaff={targetStaff}
+              setTargetStaff={setTargetStaff}
+            />
+          )}
           {menu === "customer" && (
-            <CustomerService storeId={storeId.id} staffId={userData.id} />
+            <CustomerService storeId={id} staffId={userData.id} />
           )}
         </div>
       </div>

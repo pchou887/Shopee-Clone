@@ -1,19 +1,27 @@
 import { Request, Response } from "express";
-import Chat, { IChatHistory, IMessage } from "../models/mongoose.js";
+import Chat, { IChatHistory } from "../models/mongoose.js";
 import * as storeModel from "../models/store.js";
 import { findUserByIds } from "../models/user.js";
 
 export const getChat = async (req: Request, res: Response) => {
   try {
     const chatData = await Chat.find({ user_id: res.locals.userId });
+    if (!chatData.length) return res.status(200).json({ data: chatData });
     const storeIds = chatData.map((ele) => ele.store_id);
     const stores = await storeModel.findStores(storeIds);
+    const storeNameObj = stores.reduce(
+      (obj: { [storeId: number]: string }, ele) => {
+        obj[ele.id] = ele.name;
+        return obj;
+      },
+      {}
+    );
     const resData = chatData.map((ele, index) => ({
       storeId: ele.store_id,
       toStoreUnread: ele.toStoreUnread,
       toUserUnread: ele.toUserUnread,
       messages: ele.message,
-      storeName: stores[index].name,
+      storeName: storeNameObj[ele.store_id],
     }));
     res.status(200).json({ data: resData });
   } catch (err) {

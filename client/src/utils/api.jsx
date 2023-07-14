@@ -137,7 +137,7 @@ const api = {
     formData.append("category", data.category);
     formData.append("description", data.description);
     formData.append("main_image", data.main_image);
-    formData.append("images", data.images);
+    data.images.map((ele) => formData.append("images", ele));
     data.variants.forEach((ele) => {
       formData.append("kind", ele.kind);
       formData.append("stock", ele.stock);
@@ -244,6 +244,19 @@ const api = {
           email,
           role_id: role,
         }),
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
+  DeleteStaff: async (storeId, staffId, token) => {
+    const response = await fetch(
+      `${hostName}${version}/store/${storeId}/user/${staffId}/role/delete`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
     const result = await response.json();

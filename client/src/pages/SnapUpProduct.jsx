@@ -5,83 +5,95 @@ import { io } from "socket.io-client";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
 import ProductConponent from "../components/Product";
-
-const SOCKET_URL =
-  import.meta.env.VITE_DEV_SNAPUP_SOCKET || "https://api.hyperushle.com";
+const URL = import.meta.env.VITE_DEV_SNAPUP_SOCKET || "";
 
 function Product() {
   const snapup = true;
+  const [socket] = useState(() => io(URL, { transports: ["websocket"] }));
   const [variantId, setVariantId] = useState("");
   const [product, setProduct] = useState("");
   const [store, setStore] = useState("");
   const [stock, setStock] = useState("");
   const [amount, setAmount] = useState(1);
-  const socket = io(SOCKET_URL, {
-    transports: ["websocket"],
-  });
   const navigate = useNavigate();
-  socket.on("wait", (data) => {
-    toastMessage.warn("現在人數眾多請稍待片刻");
-    console.log(data);
-  });
-  socket.on("turnTo", (data) => {
-    toastMessage.warn("您有 15 分鐘的時間可在此頁面操作");
-    const userInfo = JSON.parse(localStorage.getItem("user"));
-    const variant = product.variants.filter(
-      (ele) => ele.variantId === variantId
-    );
-    const sendData = {
-      ...variant[0],
-      name: product.name,
-      storeId: product.store_id,
-      image: product.main_image,
-      productId: product.id,
-      amount: data.amount,
-      expire: new Date(Number(data.expire)).toLocaleString(),
+
+  useEffect(() => {
+    socket.on("wait", (data) => {
+      toastMessage.warn("現在人數眾多請稍待片刻");
+    });
+
+    socket.on("error", (err) => {
+      if (err.message.includes("jwt")) {
+        toastMessage.error("請先登入");
+        navigate("/login");
+        return;
+      }
+      toastMessage.error(err.message);
+    });
+    return () => {
+      socket.off("wait");
+      socket.off("error");
     };
-    socket.emit("orderProduct", { ...sendData, userId: userInfo.user.id });
-    localStorage.setItem("snapUpProduct", JSON.stringify([sendData]));
-    navigate("/snapup/order");
-  });
-  socket.on("diffStock", (data) => {
-    const variants = product.variants.map((ele) => {
-      if (ele.variantId === data.variantId)
-        return { ...ele, stock: ele.stock - data.stock };
-      return ele;
-    });
-    setProduct({ ...product, variants });
-  });
-  socket.on("addStock", (data) => {
-    const variants = product.variants.map((ele) => {
-      if (ele.variantId === data.variantId)
-        return { ...ele, stock: ele.stock + data.stock };
-      return ele;
-    });
-    setProduct({ ...product, variants });
-    setStock;
-  });
-  socket.on("error", (err) => {
-    if (err.message.includes("jwt")) {
-      toastMessage.error("登入超時");
-      navigate("/login");
-      return;
-    }
-    toastMessage.error(err.message);
-  });
+  }, []);
 
   useEffect(() => {
     async function getProduct() {
       try {
         const result = await api.GetSnapUpProduct(7);
-        if (result.errors) throw new Error("No Found Product");
+        if (result.errors) throw new Error("查無此商品");
         setProduct(result.data);
         setStore(result.data.store);
       } catch (err) {
-        console.log(err);
+        toastMessage.error(err.message);
+        navigate("/");
       }
     }
     getProduct();
   }, []);
+
+  useEffect(() => {
+    socket.on("turnTo", (data) => {
+      toastMessage.warn("您有 15 分鐘的時間可在此頁面操作");
+      const user = JSON.parse(localStorage.getItem("user"));
+      const variant = product.variants.filter(
+        (ele) => ele.variantId === data.variantId
+      );
+      const sendData = {
+        ...variant[0],
+        name: product.name,
+        storeId: product.store_id,
+        image: product.main_image,
+        productId: product.id,
+        amount: data.amount,
+        expire: new Date(Number(data.expire)).toLocaleString(),
+      };
+      socket.emit("orderProduct", { ...sendData, userId: user.id });
+      localStorage.setItem("snapUpProduct", JSON.stringify([sendData]));
+      navigate("/snapup/order");
+    });
+    socket.on("diffStock", (data) => {
+      const variants = product.variants.map((ele) => {
+        if (ele.variantId === data.variantId)
+          return { ...ele, stock: ele.stock - data.stock };
+        return ele;
+      });
+      setProduct({ ...product, variants });
+    });
+    socket.on("addStock", (data) => {
+      const variants = product.variants.map((ele) => {
+        if (ele.variantId === data.variantId)
+          return { ...ele, stock: ele.stock + data.stock };
+        return ele;
+      });
+      setProduct({ ...product, variants });
+      setStock;
+    });
+    return () => {
+      socket.off("turnTo");
+      socket.off("diffStock");
+      socket.off("addStock");
+    };
+  }, [product]);
 
   async function sendOrder() {
     const token = localStorage.getItem("jwtToken");

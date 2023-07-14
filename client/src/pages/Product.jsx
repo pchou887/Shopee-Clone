@@ -3,12 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
 import Product from "../components/Product";
+import UserChat from "../components/UserChat";
 
 function ProductPage() {
   const [product, setProduct] = useState("");
   const [variantId, setVariantId] = useState("");
   const [store, setStore] = useState("");
   const [amount, setAmount] = useState(1);
+  const [open, setOpen] = useState(false);
+  const [storeChat, setStoreChat] = useState("");
   const navigate = useNavigate();
   const productId = useParams("id");
   useLayoutEffect(() => {
@@ -94,9 +97,36 @@ function ProductPage() {
             setVariantId={setVariantId}
             sendOrder={sendOrder}
             addToCart={addToCart}
+            open={open}
+            setOpen={setOpen}
+            storeChat={storeChat}
+            setStoreChat={setStoreChat}
           />
         )}
       </div>
+      {open ? (
+        <UserChat
+          open={open}
+          setOpen={setOpen}
+          storeChat={storeChat}
+          setStoreChat={setStoreChat}
+        />
+      ) : (
+        <div
+          style={{
+            display: `${localStorage.getItem("user") ? "fixed" : "none"}`,
+          }}
+          className="chat-area-icon"
+          onClick={() => setOpen(!open)}
+        >
+          <img
+            src="https://d1a26cbu5iquck.cloudfront.net/icon/chat.png"
+            alt=""
+            className="chat-area-icon-img"
+          />
+          聊聊
+        </div>
+      )}
     </>
   );
 }

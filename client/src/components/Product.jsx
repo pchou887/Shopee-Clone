@@ -23,10 +23,11 @@ function Product({
   setAmount,
   addToCart,
   snapup,
+  setOpen,
+  setStoreChat,
 }) {
   const [price, setPrice] = useState(priceRange(product.variants));
   const [stock, setStock] = useState(allStock(product.variants));
-  console.log(product);
   useEffect(() => {
     if (variantId) {
       const variant = product.variants.find(
@@ -114,16 +115,32 @@ function Product({
           <img src={store.picture} alt="" className="product-store-picture" />
           <div className="product-store-info">
             <div className="product-store-name">{store.name}</div>
-            <Link to={`/store/${product.store_id}/product`}>
-              <div className="product-check-store-btn">
+            <div className="product-store-interact-btn">
+              <div
+                className="product-store-chat"
+                onClick={() => {
+                  setOpen(true);
+                  setStoreChat({ storeId: store.id, storeName: store.name });
+                }}
+              >
                 <img
-                  src="https://d1a26cbu5iquck.cloudfront.net/icon/store.png"
+                  src="https://d1a26cbu5iquck.cloudfront.net/icon/chat.png"
                   alt=""
                   className="product-store-btn-icon"
                 />
-                查看賣場
+                聊聊
               </div>
-            </Link>
+              <Link to={`/store/${product.store_id}/product`}>
+                <div className="product-check-store-btn">
+                  <img
+                    src="https://d1a26cbu5iquck.cloudfront.net/icon/store.png"
+                    alt=""
+                    className="product-store-btn-icon"
+                  />
+                  查看賣場
+                </div>
+              </Link>
+            </div>
           </div>
           <div className="product-store-detail">
             <div

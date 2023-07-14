@@ -55,10 +55,9 @@
   margin-left: 1px;
 }
 .other {
-  margin-bottom: 5px;
   background-color: #ee4d2d;
   width: 100%;
-  min-height: 115px;
+  height: 115px;
   cursor: pointer;
 }
 .home-product-header {
@@ -77,6 +76,7 @@
 .home-products {
   padding-top: 2rem;
   display: flex;
+  flex-wrap: wrap;
   margin: auto;
   width: 1188px;
   gap: 6px;

@@ -82,7 +82,9 @@ io.on("connection", (socket) => {
     socket.join(`${storeId}:${userId}`);
     io.to(`manager:${storeId}`).emit("staffOnline", { data: userId });
   });
-
+  socket.on("userConnect", ({ userId }) => {
+    socket.join(`userChat:${userId}`);
+  });
   socket.on("userJoin", async ({ userId, storeId, picture, userName }) => {
     const roomName = `store_${storeId}-user_${userId}`;
     socket.join(`userChat:${userId}`);

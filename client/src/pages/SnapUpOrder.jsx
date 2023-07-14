@@ -22,7 +22,6 @@ function Order() {
     }
     setProduct(JSON.parse(snapUpProduct));
   }, []);
-  console.log(product);
   async function checkoutSubmit() {
     try {
       const token = localStorage.getItem("jwtToken");

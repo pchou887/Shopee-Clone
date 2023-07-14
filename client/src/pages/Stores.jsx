@@ -28,7 +28,6 @@ function Stores() {
     }
     getOwnStores();
   }, []);
-  console.log(ownStores);
   return (
     <>
       <div className="content" style={{ paddingTop: "3rem" }}>

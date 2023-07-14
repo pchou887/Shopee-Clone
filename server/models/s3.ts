@@ -36,7 +36,7 @@ export const uploadProductImageToS3 = async (images: image[]) => {
   const imageResults = images.map((ele, index) => ({
     ...ele,
     path: params[index].Key,
-    type: index === 0 ? "main_image" : "image",
+    type: index === 0 ? "main_image" : "images",
   }));
 
   return imageResults;

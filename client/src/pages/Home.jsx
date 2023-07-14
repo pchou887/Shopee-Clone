@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import ShowProducts from "../components/ShowProducts";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
@@ -30,12 +31,18 @@ function Home() {
               <Carousels />
             </div>
             <div className="campaign-other">
-              <div className="other other-1">
-                <h3>other 1</h3>
-              </div>
-              <div className="other">
-                <h3>other 2</h3>
-              </div>
+              <Link to="/snapup">
+                <img
+                  className="other other-1"
+                  src="https://d1a26cbu5iquck.cloudfront.net/campaign/other-campaign1.jpg"
+                />
+              </Link>
+              <Link to="/snapup">
+                <img
+                  className="other"
+                  src="https://d1a26cbu5iquck.cloudfront.net/campaign/other-campaign2.jpeg"
+                />
+              </Link>
             </div>
           </div>
         </div>
@@ -47,7 +54,13 @@ function Home() {
       {open ? (
         <UserChat open={open} setOpen={setOpen} />
       ) : (
-        <div className="chat-area-icon" onClick={() => setOpen(!open)}>
+        <div
+          style={{
+            display: `${localStorage.getItem("user") ? "fixed" : "none"}`,
+          }}
+          className="chat-area-icon"
+          onClick={() => setOpen(!open)}
+        >
           <img
             src="https://d1a26cbu5iquck.cloudfront.net/icon/chat.png"
             alt=""

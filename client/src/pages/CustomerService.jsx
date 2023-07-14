@@ -1,88 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../utils/api";
 
-const SOCKET_URL = import.meta.env.VITE_DEV_HOST_NAME;
+const URL = import.meta.env.VITE_DEV_HOST_NAME || "";
 
 function CustomerService() {
   const { id, staffId } = useParams();
+  const [socket] = useState(() => io(URL));
   const [chats, setChats] = useState("");
   const [serverId, setServerId] = useState("");
   const [message, setMessage] = useState("");
   const [roomMessage, setRoomMessage] = useState("");
   const [userOrders, setUserOrders] = useState("");
   const [picture, setPicture] = useState("");
-  const socket = io(SOCKET_URL);
-  socket.emit("staffJoin", { userId: staffId, storeId: id });
-  socket.on("hasCustomer", ({ room, storeId, userId, picture, userName }) => {
-    const isExist = chats.filter(
-      (ele) => Number(ele.user_id) === Number(userId)
-    );
-    if (!isExist.length) {
-      setChats([
-        {
-          user_id: userId,
-          name: userName,
-          picture,
-        },
-        ...chats,
-      ]);
-    } else {
-      const updateChat = chats.filter((ele) => ele.user_id !== userId);
-      setChats([
-        {
-          user_id: userId,
-          name: userName,
-          picture,
-        },
-        ...updateChat,
-      ]);
-    }
-    socket.emit("customerService", { room, storeId, userId });
-  });
-  socket.on("toStore", (data) => {
-    if (data.from === serverId) {
-      setRoomMessage([
-        ...roomMessage,
-        { from: data.from, content: data.message },
-      ]);
-    } else if (!chats.some((ele) => ele.user_id === data.userId)) {
-      setChats([
-        {
-          user_id: data.from,
-          name: data.name,
-          picture: data.picture,
-          message: data.message,
-        },
-        ...chats,
-      ]);
-      localStorage.setItem("chats", JSON.stringify(chats));
-    } else {
-      const updateChat = chats.filter((ele) => ele.user_id !== data.from);
-      setChats([
-        {
-          user_id: data.from,
-          name: data.name,
-          picture: data.picture,
-          message: data.message,
-        },
-        ...updateChat,
-      ]);
-    }
-  });
+  const messageContainerRef = useRef(null);
   useEffect(() => {
-    socket.connect();
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-  useEffect(() => {
+    socket.emit("staffJoin", { userId: staffId, storeId: id });
     const token = localStorage.getItem("jwtToken");
     async function getChats() {
       const result = await api.GetStoreChat(id, token);
-      setChats(result.data);
-      localStorage.setItem("chats", JSON.stringify(result.data));
+      setChats([...result.data]);
     }
     getChats();
   }, []);
@@ -93,9 +31,83 @@ function CustomerService() {
       const orderResult = await api.GetStoreUserOrders(id, serverId, token);
       setRoomMessage(messageResult.data.message);
       setUserOrders(orderResult.data);
+      setTimeout(() => {
+        messageContainerRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }, 0);
     }
     getMessages();
   }, [serverId]);
+  useEffect(() => {
+    socket.on("hasCustomer", ({ room, storeId, userId, picture, userName }) => {
+      const isExist = chats.filter(
+        (ele) => Number(ele.user_id) === Number(userId)
+      );
+      if (!isExist.length) {
+        setChats([
+          {
+            user_id: userId,
+            name: userName,
+            picture,
+          },
+          ...chats,
+        ]);
+      } else {
+        const updateChat = chats.filter((ele) => ele.user_id !== userId);
+        setChats([
+          {
+            user_id: userId,
+            name: userName,
+            picture,
+          },
+          ...updateChat,
+        ]);
+      }
+      socket.emit("customerService", { room, storeId, userId });
+    });
+    socket.on("toStore", (data) => {
+      if (data.from === serverId) {
+        setRoomMessage([
+          ...roomMessage,
+          { from: data.from, content: data.message },
+        ]);
+        setTimeout(() => {
+          messageContainerRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+          });
+        }, 0);
+      } else if (!chats.some((ele) => ele.user_id === data.userId)) {
+        setChats([
+          {
+            user_id: data.from,
+            name: data.userName,
+            picture: data.picture,
+            message: data.message,
+          },
+          ...chats,
+        ]);
+      } else {
+        const updateChat = chats.filter((ele) => ele.user_id !== data.from);
+        setChats([
+          {
+            user_id: data.from,
+            name: data.userName,
+            picture: data.picture,
+            message: data.message,
+          },
+          ...updateChat,
+        ]);
+      }
+    });
+    return () => {
+      socket.off("toStore");
+      socket.off("hasCustomer");
+    };
+  }, [serverId, chats, roomMessage]);
+
   function sendMessage() {
     setRoomMessage([...roomMessage, { from: staffId, content: message }]);
     setMessage("");
@@ -105,6 +117,12 @@ function CustomerService() {
       storeId: id,
       message,
     });
+    setTimeout(() => {
+      messageContainerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 0);
   }
   return (
     <>
@@ -158,6 +176,7 @@ function CustomerService() {
               </div>
             </div>
           )}
+          <div ref={messageContainerRef}></div>
         </div>
         <div className="cs-order">
           <div className="cs-order-title">訂單訊息</div>

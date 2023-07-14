@@ -29,7 +29,7 @@ function StoreStaff({
   useLayoutEffect(() => {
     setIsLoad(true);
     const user = JSON.parse(localStorage.getItem("user"));
-    const userId = user.user.id;
+    const userId = user.id;
     const filterOwnId = data.filter(
       (ele) => userId != ele.user_id && ele.role_name != "admin"
     );
@@ -53,9 +53,6 @@ function StoreStaff({
   };
   const changeRoleClick = async (e) => {
     const token = localStorage.getItem("jwtToken");
-    console.log(storeId);
-    console.log(targetStaff);
-    console.log(targetRole);
     try {
       const result = await api.ChangeRole(
         storeId,
@@ -76,23 +73,27 @@ function StoreStaff({
         <h3 style={{ textAlign: "center", paddingBottom: 20 }}>
           請選擇想變更權限的人
         </h3>
-        {filterData.map((ele) => (
-          <div
-            key={ele.user_id}
-            className={`store-target-item ${
-              ele.user_id === activeStaff ? "store-target-active" : ""
-            }`}
-            onClick={() => {
-              setTargetStaff(ele.user_id === targetStaff ? "" : ele.user_id);
-              handleStaffClick(ele.user_id === activeStaff ? "" : ele.user_id);
-            }}
-          >
-            <p className="target-name">{ele.user_name}</p>
-            <p className="target-role">
-              {ele.role_name === "admin" ? "管理員" : ele.role_name}
-            </p>
-          </div>
-        ))}
+        <div className="store-staff-list">
+          {filterData.map((ele) => (
+            <div
+              key={ele.user_id}
+              className={`store-target-item ${
+                ele.user_id === activeStaff ? "store-target-active" : ""
+              }`}
+              onClick={() => {
+                setTargetStaff(ele.user_id === targetStaff ? "" : ele.user_id);
+                handleStaffClick(
+                  ele.user_id === activeStaff ? "" : ele.user_id
+                );
+              }}
+            >
+              <p className="target-name">{ele.user_name}</p>
+              <p className="target-role">
+                {ele.role_name === "admin" ? "管理員" : ele.role_name}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
       <div
         className="target-user-roles"

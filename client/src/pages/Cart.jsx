@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toastMessage from "../utils/toast";
 import api from "../utils/api";
+import UserChat from "../components/UserChat";
 
 function Cart() {
   const [existIds, setExistIds] = useState([]);
   const [variants, setVariants] = useState([]);
   const [amount, setAmount] = useState({});
   const [total, setTotal] = useState(0);
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     function getProduct() {
@@ -198,6 +200,24 @@ function Cart() {
           </div>
         </div>
       </div>
+      {open ? (
+        <UserChat open={open} setOpen={setOpen} />
+      ) : (
+        <div
+          style={{
+            display: `${localStorage.getItem("user") ? "fixed" : "none"}`,
+          }}
+          className="chat-area-icon"
+          onClick={() => setOpen(!open)}
+        >
+          <img
+            src="https://d1a26cbu5iquck.cloudfront.net/icon/chat.png"
+            alt=""
+            className="chat-area-icon-img"
+          />
+          聊聊
+        </div>
+      )}
     </>
   );
 }

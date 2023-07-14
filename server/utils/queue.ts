@@ -11,7 +11,7 @@ const userToOrderPage = async () => {
   while (true) {
     try {
       const orderingNumber = Number(await redisModel.getStr("ordering"));
-      if (orderingNumber < 2) {
+      if (orderingNumber < 5) {
         const user = await redisModel.bpopminZset(`queue`);
         if (!Array.isArray(user)) {
           continue;

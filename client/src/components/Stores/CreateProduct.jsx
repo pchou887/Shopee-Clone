@@ -9,7 +9,40 @@ import api from "../../utils/api";
 import toastMessage from "../../utils/toast";
 
 const { TextArea } = Input;
-
+const fileTypes = [
+  "image/apng",
+  "image/bmp",
+  "image/gif",
+  "image/jpeg",
+  "image/pjpeg",
+  "image/png",
+  "image/svg+xml",
+  "image/tiff",
+  "image/webp",
+  "image/x-icon",
+];
+function validFileType(main_image, images) {
+  const imageFileTypes = [];
+  main_image.forEach((ele) => imageFileTypes.push(ele.type));
+  images.forEach((ele) => imageFileTypes.push(ele.type));
+  return imageFileTypes.every((ele) => fileTypes.includes(ele));
+}
+function isMinus(variants) {
+  return variants.some((ele) => ele.stock < 0 || ele.price <= 0);
+}
+function validFileSize(main_image, images) {
+  const MB = 1024 * 1024;
+  const imageFileSize = [];
+  main_image.forEach((ele) => imageFileSize.push(ele.size));
+  images.forEach((ele) => imageFileSize.push(ele.size));
+  return imageFileSize.every((ele) => ele < 5 * MB);
+}
+function isLengthLimit(name, variants) {
+  const strLengthArr = [];
+  strLengthArr.push(name.length);
+  variants.forEach((ele) => strLengthArr.push(ele.kind.length));
+  return strLengthArr.some((ele) => ele > 20);
+}
 function CreateProduct({ storeId }) {
   const [main, setMain] = useState([]);
   const [images, setImages] = useState([]);
@@ -20,16 +53,23 @@ function CreateProduct({ storeId }) {
         toastMessage.error("請至少添加一個種類");
         return;
       }
+      if (!validFileType(main, images))
+        throw new Error("請不要上傳照片以外的檔案");
+      if (!validFileSize(main, images))
+        throw new Error("請上傳小於 5 MB 的檔案");
+      if (isMinus(values.variants)) throw new Error("庫存與價格不能為負");
+      if (isLengthLimit(values.name, values.variants))
+        throw new Error("名字與種類不得超過20字");
       const result = await api.CreateProduct(
         {
           ...values,
           store_id: storeId,
-          main_image: values.main_image?.file,
-          images: values?.images?.fileList,
+          main_image: main[0],
+          images: images,
         },
         token
       );
-      if (result.errors) throw new Error("Oops!創建商品失敗");
+      if (result.errors) throw new Error("創建商品失敗");
       toastMessage.success("創建成功");
     } catch (err) {
       toastMessage.error(err.message);
@@ -106,12 +146,12 @@ function CreateProduct({ storeId }) {
           rules={[{ required: true, message: "Missing!" }]}
         >
           <Upload {...mainProps} maxCount={1}>
-            <Button icon={<UploadOutlined />}>Select File</Button>
+            <Button icon={<UploadOutlined />}>照片請小於 5 MB</Button>
           </Upload>
         </Form.Item>
         <Form.Item name="images" label="其他照片">
           <Upload {...imagesProps} maxCount={5}>
-            <Button icon={<UploadOutlined />}>Select File</Button>
+            <Button icon={<UploadOutlined />}>照片請小於 5 MB</Button>
           </Upload>
         </Form.Item>
         <div className="create-variants">

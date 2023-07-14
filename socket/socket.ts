@@ -71,6 +71,7 @@ pubsubClient.on("message", (channel: string, message: string) => {
   const data = JSON.parse(message);
   if (channel === "turn-to") {
     io.to(`buy:${data.id}`).emit("turnTo", {
+      variantId: data.variantId,
       message: data.message,
       amount: data.amount,
       expire: data.expire,

@@ -1,11 +1,10 @@
 import { Carousel } from "antd";
 
 const contentStyle = {
+  minWidth: "795px",
   height: "235px",
-  color: "#fff",
   lineHeight: "235px",
-  textAlign: "center",
-  background: "#364d79",
+  cursor: "default",
 };
 
 const Carousels = () => {
@@ -13,16 +12,22 @@ const Carousels = () => {
   return (
     <Carousel dotPosition="bottom" dots={{ className: dotClass }} autoplay>
       <div>
-        <h3 style={contentStyle}>1</h3>
+        <img
+          style={contentStyle}
+          src="https://d1a26cbu5iquck.cloudfront.net/campaign/campaign1.jpeg"
+        />
       </div>
       <div>
-        <h3 style={contentStyle}>2</h3>
+        <img
+          style={contentStyle}
+          src="https://d1a26cbu5iquck.cloudfront.net/campaign/campaign2.jpeg"
+        />
       </div>
       <div>
-        <h3 style={contentStyle}>3</h3>
-      </div>
-      <div>
-        <h3 style={contentStyle}>4</h3>
+        <img
+          style={contentStyle}
+          src="https://d1a26cbu5iquck.cloudfront.net/campaign/campaign3.jpeg"
+        />
       </div>
     </Carousel>
   );
