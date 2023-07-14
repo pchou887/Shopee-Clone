@@ -71,13 +71,10 @@ app.use(errorHandler);
 
 io.on("connection", (socket) => {
   socket.on("staffJoin", async ({ userId, storeId }) => {
-    await redisModel.setZset(
-      "staffStatus",
-      1,
-      `${storeId}:${userId}:${socket.id}`
-    );
-
-    await redisModel.setZset("servedNumber", 0, `${storeId}:${userId}`);
+    await Promise.all([
+      redisModel.setZset("staffStatus", 1, `${storeId}:${userId}:${socket.id}`),
+      redisModel.setZset("servedNumber", 1, `${storeId}:${userId}`),
+    ]);
     socket.join(`storeChat:${storeId}`);
     socket.join(`${storeId}:${userId}`);
     io.to(`manager:${storeId}`).emit("staffOnline", { data: userId });
@@ -113,15 +110,18 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("customerService", async ({ room, storeId, userId }) => {
-    await redisModel.incrZset("servedNumber", 1, `${storeId}:${userId}`);
+  socket.on("customerService", async ({ room, storeId, staffId }) => {
+    const userId = room.replace(`store_${storeId}-user_`, "");
+    await redisModel.incrZset("servedNumber", 1, `${storeId}:${staffId}`);
     socket.join(room);
+    socket.join(`userChat:${userId}`);
   });
 
-  socket.on("staffLeaveRoom", async ({ room, storeId, userId }) => {
-    await redisModel.incrZset("servedNumber", -1, `${storeId}:${userId}`);
+  socket.on("staffLeaveRoom", async ({ room, storeId, staffId }) => {
+    const userId = room.replace(`store_${storeId}-user_`, "");
+    await redisModel.incrZset("servedNumber", -1, `${storeId}:${staffId}`);
     socket.leave(room);
-    io.to(room).emit("leave", { message: "staff is leave this room" });
+    socket.leave(`userChat:${userId}`);
   });
 
   socket.on("userLeaveRoom", ({ room }) => {
@@ -133,7 +133,7 @@ io.on("connection", (socket) => {
     const from = Number(data.from);
     const userId = Number(data.userId);
     const storeId = Number(data.storeId);
-    const message = data.message;
+    const { storeName, message } = data;
     const chat = await Chat.findOne({ user_id: userId, store_id: storeId });
     if (chat) {
       chat.toUserUnread += 1;
@@ -147,6 +147,7 @@ io.on("connection", (socket) => {
         from,
         userId,
         storeId,
+        storeName,
         message,
         time,
       });
@@ -158,7 +159,7 @@ io.on("connection", (socket) => {
     const from = Number(data.from);
     const userId = Number(data.userId);
     const storeId = Number(data.storeId);
-    const message = data.message;
+    const { picture, message, userName } = data;
     const chat = await Chat.findOne({ user_id: userId, store_id: storeId });
     if (chat) {
       chat.toStoreUnread += 1;
@@ -173,7 +174,9 @@ io.on("connection", (socket) => {
         userId,
         storeId,
         message,
+        picture,
         time,
+        userName,
       });
     }
   });

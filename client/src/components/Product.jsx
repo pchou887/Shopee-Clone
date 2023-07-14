@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Amount from "./Amount";
+import Loading from "./Loading";
 
 function priceRange(variants) {
   const groupPrice = variants.map((ele) => Number(ele.price));
@@ -25,6 +26,7 @@ function Product({
   snapup,
   setOpen,
   setStoreChat,
+  isLoad,
 }) {
   const [price, setPrice] = useState(priceRange(product.variants));
   const [stock, setStock] = useState(allStock(product.variants));
@@ -102,9 +104,13 @@ function Product({
                     加入購物車
                   </div>
                 )}
-                <button className="product-buy" onClick={sendOrder}>
-                  直接購買
-                </button>
+                {isLoad ? (
+                  <Loading style={{ marginLeft: 25, marginTop: 10 }} />
+                ) : (
+                  <button className="product-buy" onClick={sendOrder}>
+                    {snapup ? "立即搶購" : "直接購買"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../utils/api";
+import checkRoles from "../utils/checkRole";
+import toastMessage from "../utils/toast";
 
 const URL = import.meta.env.VITE_DEV_HOST_NAME || "";
 
 function CustomerService() {
+  const user = JSON.parse(localStorage.getItem("user"));
   const { id, staffId } = useParams();
   const [socket] = useState(() => io(URL));
+  const [store, setStore] = useState("");
   const [chats, setChats] = useState("");
   const [serverId, setServerId] = useState("");
   const [message, setMessage] = useState("");
@@ -15,6 +19,7 @@ function CustomerService() {
   const [userOrders, setUserOrders] = useState("");
   const [picture, setPicture] = useState("");
   const messageContainerRef = useRef(null);
+  const navigate = useNavigate();
   useEffect(() => {
     socket.emit("staffJoin", { userId: staffId, storeId: id });
     const token = localStorage.getItem("jwtToken");
@@ -22,7 +27,22 @@ function CustomerService() {
       const result = await api.GetStoreChat(id, token);
       setChats([...result.data]);
     }
+    async function checkPermission() {
+      const result = await api.GetStoreOwnRole(id, token);
+      if (result.errors.includes("jwt")) {
+        localStorage.removeItem("jwtToken");
+        localStorage.removeItem("user");
+        toastMessage.error("登入超時");
+        return navigate("/login");
+      }
+      if (!checkRoles.CustomerService(result.data.roles)) {
+        toastMessage.error("你沒有權限可以訪問該網站");
+        return navigate(`/store/${id}`);
+      }
+      setStore(result.data);
+    }
     getChats();
+    checkPermission();
   }, []);
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
@@ -116,6 +136,7 @@ function CustomerService() {
       userId: serverId,
       storeId: id,
       message,
+      storeName: store.name,
     });
     setTimeout(() => {
       messageContainerRef.current?.scrollIntoView({
@@ -137,6 +158,16 @@ function CustomerService() {
                   serverId === ele.user_id ? "cs-channel-active" : ""
                 }`}
                 onClick={() => {
+                  socket.emit("staffLeaveRoom", {
+                    room: `${id}:${serverId}`,
+                    storeId: id,
+                    userId: user.id,
+                  });
+                  socket.emit("customerService", {
+                    room: `${id}:${ele.user_id}`,
+                    storeId: id,
+                    userId: user.id,
+                  });
                   setServerId(ele.user_id);
                   setPicture(ele.picture);
                 }}

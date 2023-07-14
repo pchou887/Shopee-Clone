@@ -26,7 +26,7 @@ const ProductSchema = z.object({
   description: z.string(),
 });
 
-export const PAGE_COUNT = 10;
+export const PAGE_COUNT = 30;
 export async function getProducts({
   paging = 0,
   category,

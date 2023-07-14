@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -9,6 +8,7 @@ const URL = import.meta.env.VITE_DEV_SNAPUP_SOCKET || "";
 
 function Product() {
   const snapup = true;
+  const [isLoad, setIsLoad] = useState(false);
   const [socket] = useState(() => io(URL, { transports: ["websocket"] }));
   const [variantId, setVariantId] = useState("");
   const [product, setProduct] = useState("");
@@ -106,6 +106,7 @@ function Product() {
       toastMessage.error("請選擇至少一樣商品!");
       return;
     }
+    setIsLoad(true);
     socket.emit("queue", { token, productId: product.id, variantId, amount });
   }
   return (
@@ -122,6 +123,7 @@ function Product() {
           setStock={setStock}
           sendOrder={sendOrder}
           snapup={snapup}
+          isLoad={isLoad}
         />
       )}
     </>

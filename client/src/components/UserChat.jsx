@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../utils/api";
+import toastMessage from "../utils/toast";
 
 const URL = import.meta.env.VITE_DEV_HOST_NAME || "";
 
@@ -43,6 +44,7 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
         if (err.message.includes("jwt")) {
           localStorage.removeItem("jwtToken");
           localStorage.removeItem("user");
+          toastMessage.error("請先登入");
           return navigate("/login");
         }
       }
@@ -51,29 +53,30 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
   }, []);
   useEffect(() => {
     socket.on("toUser", (data) => {
+      const { storeId, storeName, from } = data;
       if (data.from === chatStoreId) {
-        setChatRoom([...chatRoom, { from: data.from, content: data.message }]);
+        setChatRoom([...chatRoom, { from, content: data.message }]);
         setTimeout(() => {
           messageContainerRef.current?.scrollIntoView({
             behavior: "smooth",
             block: "end",
           });
         }, 0);
-      } else if (!chats.some((ele) => ele.storeId === data.storeId)) {
+      } else if (!chats.some((ele) => ele.storeId === storeId)) {
         setChats([
           {
-            storeId: data.storeId,
-            storeName: data.storeName,
+            storeId,
+            storeName,
             message: data.message,
           },
           ...chats,
         ]);
       } else {
-        const updateChat = chats.filter((ele) => ele.storeId !== data.storeId);
+        const updateChat = chats.filter((ele) => ele.storeId !== storeId);
         setChats([
           {
-            storeId: data.storeId,
-            storeName: data.storeName,
+            storeId,
+            storeName,
             message: data.message,
           },
           ...updateChat,

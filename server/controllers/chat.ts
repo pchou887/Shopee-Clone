@@ -102,11 +102,12 @@ const adminChatOrganize = (
 export const staffGetAllUserChat = async (req: Request, res: Response) => {
   try {
     const storeId = Number(req.params.storeId);
-    const data = await Chat.find({ store_id: storeId });
-    const userIds = data.map((ele) => ele.user_id);
+    const chatData = await Chat.find({ store_id: storeId });
+    if (!chatData.length) return res.status(200).json({ data: chatData });
+    const userIds = chatData.map((ele) => ele.user_id);
     const userData = await findUserByIds(userIds);
-    const resData = adminChatOrganize(data, userData);
-    res.status(200).json({ data: resData });
+    const data = adminChatOrganize(chatData, userData);
+    res.status(200).json({ data });
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ errors: err.message });
