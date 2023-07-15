@@ -99,15 +99,13 @@ function Order() {
         method: "POST",
       });
       const data = await response.json();
-      if (data.errors) {
-        toastMessage.error("資料輸入或是登入有錯誤");
-        return;
-      }
+      if (data.errors) if (data.errors) throw new Error(data.errors);
       localStorage.removeItem("orderProducts");
       toastMessage.success("付款成功!");
       navigate("/");
     } catch (err) {
       console.log(err);
+      toastMessage.error(err.message);
     }
   }
   return (

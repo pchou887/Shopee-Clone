@@ -28,17 +28,46 @@ io.on("connection", (socket) => {
       const userId = decoded.userId;
       socket.join(`buy:${userId}`);
       const queueLength = await redisModel.incrStr("queueLength");
-      const isOrder = await redisModel.getStr(`userOrder:${userId}`);
-      if (queueLength > 500 || isOrder) {
+      const userOrderStr = await redisModel.getStr(`userOrder:${userId}`);
+      if (queueLength > 500) {
         await redisModel.decrStr("queueLength");
-        throw new Error(
-          "Too many people. Please try again after a few minutes."
+        throw new Error("現在人數眾多，請稍後在試");
+      }
+      if (userOrderStr) {
+        const userOrder = JSON.parse(userOrderStr);
+        const productStr = await redisModel.getStr(
+          `snapUp:${userOrder.productId}`
         );
+        if (!productStr) throw new Error("查無此商品，請確認商品是否存在!");
+        const expireTimeCheck = await redisModel.getZsetMemberScore(
+          "order",
+          String(userId)
+        );
+        const product = JSON.parse(productStr);
+        const variant = product.variants.filter(
+          (ele: {
+            variantId: number;
+            kind: string;
+            stock: number;
+            price: number;
+          }) => ele.variantId === Number(userOrder.variantId)
+        );
+        const order = {
+          amount: userOrder.amount,
+          ...product,
+          ...variant[0],
+        };
+        io.to(`buy:${userId}`).emit("hadOrder", {
+          message: "你已經有訂單了!",
+          order,
+          expire: expireTimeCheck,
+        });
+        return;
       }
       const newQty = await redisModel.decrByStr(`stock:${variantId}`, amount);
       if (newQty < 0) {
         await redisModel.incrByStr(`stock:${variantId}`, amount);
-        throw new Error(`Inventory shortage ${userId}`);
+        throw new Error(`庫存不足 ${userId}`);
       }
       socket.leave(socket.id);
       const numberPlate = await redisModel.incrStr(`number_plate`);
@@ -58,15 +87,9 @@ io.on("connection", (socket) => {
       io.to(socket.id).emit("error", { message: "queue error" });
     }
   });
-  socket.on("disconnect", async () => {
-    // const queueMembers = await redisModel.getZset(`queue`);
-    // if (queueMembers.length) {
-    //   await redisModel.rmZsetMember("queue", socket.id);
-    // }
-  });
 });
 
-pubsubClient.subscribe("turn-to", "add-stock", "error");
+pubsubClient.subscribe("turn-to", "add-stock", "error", "had-order");
 pubsubClient.on("message", (channel: string, message: string) => {
   const data = JSON.parse(message);
   if (channel === "turn-to") {
@@ -90,6 +113,13 @@ pubsubClient.on("message", (channel: string, message: string) => {
   if (channel === "error") {
     io.to(`buy:${data.id}`).emit("error", {
       message: data.message,
+    });
+  }
+  if (channel === "had-order") {
+    io.to(`buy:${data.id}`).emit("hadOrder", {
+      message: data.message,
+      order: data.order,
+      expire: data.expire,
     });
   }
 });

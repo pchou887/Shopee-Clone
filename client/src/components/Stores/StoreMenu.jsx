@@ -16,8 +16,8 @@ function getItem(label, key, icon, children, type) {
 }
 
 const putItem = {
-  isCreateProduct: [getItem("新增商品", "2"), getItem("更新商品", "3")],
-  isRemoveProduct: [getItem("刪除商品", "4")],
+  isCreateProduct: [getItem("新增商品", "2")],
+  isRemoveProduct: [getItem("刪除商品", "3")],
   isPermission: [
     getItem("員工管理", "staff", <TeamOutlined />, [
       getItem("更新權限", "5"),

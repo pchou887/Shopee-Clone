@@ -15,6 +15,8 @@ const COOKIE_OPTIONS = {
 export const signUp = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
+    const userExist = await userModel.findUser(email);
+    if (userExist) throw new Error("email is token");
     const userId = await userModel.createUser(email, name);
     await userProviderModel.createNativeProvider(userId, password);
     const token = await signJWT(userId);
@@ -164,7 +166,12 @@ export const getProfile = async (req: Request, res: Response) => {
   try {
     const userId = res.locals.userId;
     const user = await userModel.findUserById(userId);
-    res.status(200).json({ data: user });
+    res.status(200).json({
+      data: {
+        ...user,
+        picture: `https://d1a26cbu5iquck.cloudfront.net/${user.picture}`,
+      },
+    });
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ errors: err.message });

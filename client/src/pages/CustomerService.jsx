@@ -158,11 +158,13 @@ function CustomerService() {
                   serverId === ele.user_id ? "cs-channel-active" : ""
                 }`}
                 onClick={() => {
-                  socket.emit("staffLeaveRoom", {
-                    room: `${id}:${serverId}`,
-                    storeId: id,
-                    userId: user.id,
-                  });
+                  if (serverId) {
+                    socket.emit("staffLeaveRoom", {
+                      room: `${id}:${serverId}`,
+                      storeId: id,
+                      userId: user.id,
+                    });
+                  }
                   socket.emit("customerService", {
                     room: `${id}:${ele.user_id}`,
                     storeId: id,

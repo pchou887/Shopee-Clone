@@ -28,7 +28,7 @@ export const createStaff = async (req: Request, res: Response) => {
     const storeId = Number(req.params.storeId);
     const userRolesWithStore = await userRoleModel.findUserRoles(userId);
     if (userRolesWithStore.some((ele) => ele.store_id === storeId))
-      throw new Error("this guy is already working at this store");
+      throw new Error("already working in this store");
     const roleId: number[] = Array.isArray(req.body.role_id)
       ? req.body.role_id.map((ele: string) => Number(ele))
       : [Number(req.body.role_id)];

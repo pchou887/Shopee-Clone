@@ -4,7 +4,7 @@ function Amount({ amount, setAmount, limited, onChange }) {
       <div className="product-amount">
         <button
           className="amount-diff amount-button"
-          onClick={() => setAmount(amount - 1 > 0 ? amount - 1 : amount)}
+          onClick={() => setAmount(amount - 1 >= 0 ? amount - 1 : amount)}
         >
           -
         </button>

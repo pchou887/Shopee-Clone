@@ -13,6 +13,7 @@ import Order from "./pages/Order";
 import StoreProducts from "./pages/StoreProduct";
 import CustomerService from "./pages/CustomerService";
 import CreateStore from "./pages/CreateStore";
+import NotFound from "./pages/404notfound";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             path="/store/:id/staff/:staffId/chat"
             element={<CustomerService />}
           />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

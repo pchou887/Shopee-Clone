@@ -75,14 +75,23 @@ function Order({ products, recipient, setRecipient, checkoutSubmit }) {
                 <div className="order-address-details-title order-address-details-first">
                   寄送資訊
                 </div>
-                <div className="order-address-details-second"></div>
-                <div className="order-address-details-third"></div>
+                <div className="order-address-details-second">
+                  <div className="order-address-details-second-name">姓名</div>
+                  <div className="order-address-details-second-phone">電話</div>
+                </div>
+                <div className="order-address-details-third">地址</div>
                 <div className="order-address-details-fourth">${freight}</div>
               </div>
               <div className="order-address-details-div">
                 <div className="order-address-details-first"></div>
                 <div className="order-address-details-second text-gray">
-                  {`${recipient.name} ${recipient.phone}`}
+                  <div className="order-address-details-second-name">
+                    <div>{recipient.name}</div>
+                    <div>{recipient.email}</div>
+                  </div>
+                  <div className="order-address-details-second-phone">
+                    {recipient.phone}
+                  </div>
                 </div>
                 <div className="order-address-details-third text-gray">
                   {recipient.address}

@@ -1,6 +1,7 @@
 import { useState, useLayoutEffect } from "react";
 import api from "../../utils/api";
 import toastMessage from "../../utils/toast";
+import Loading from "../Loading";
 
 function DeleteStaff({
   data,
@@ -10,6 +11,7 @@ function DeleteStaff({
   targetStaff,
   setTargetStaff,
 }) {
+  const [isLoad, setIsLoad] = useState(false);
   const [check, setCheck] = useState(false);
   const [checkMessage, setCheckMessage] = useState("");
   const [filterData, setFilterData] = useState(data);
@@ -25,6 +27,7 @@ function DeleteStaff({
     setActiveStaff(id);
   };
   const changeRoleClick = async () => {
+    setIsLoad(true);
     setCheckMessage("");
     if (checkMessage !== "刪除") {
       toastMessage.error("請輸入正確格式");
@@ -38,6 +41,9 @@ function DeleteStaff({
     } catch (err) {
       console.log(err);
       toastMessage.error("請確認您的權限!");
+    } finally {
+      setIsLoad(false);
+      setCheck(false);
     }
   };
   return (
@@ -124,19 +130,26 @@ function DeleteStaff({
                 >
                   取消
                 </div>
-                <div
-                  style={{
-                    backgroundColor: "rgba(145, 151, 174, 1)",
-                    padding: "1vh 1vw",
-                    border: "1px solid rgba(0, 0, 0, 0.09)",
-                    color: "white",
-                    marginLeft: "1vw",
-                    cursor: "pointer",
-                  }}
-                  onClick={changeRoleClick}
-                >
-                  確認
-                </div>
+                {isLoad ? (
+                  <Loading
+                    style={{ marginLeft: "2vw", marginTop: "0.5vh" }}
+                    imgStyle={{ width: "1.5vw", height: "1.5vw" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      backgroundColor: "rgba(145, 151, 174, 1)",
+                      padding: "1vh 1vw",
+                      border: "1px solid rgba(0, 0, 0, 0.09)",
+                      color: "white",
+                      marginLeft: "1vw",
+                      cursor: "pointer",
+                    }}
+                    onClick={changeRoleClick}
+                  >
+                    確認
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -11,6 +11,9 @@ const SignUp = () => {
 
   const handleSubmit = async () => {
     try {
+      if (!name) return toastMessage.error("請輸入帳號名稱");
+      if (!email) return toastMessage.error("請輸入信箱");
+      if (!password) return toastMessage.error("請輸入密碼");
       const result = await api.SignUp(name, email, password);
       if (result.errors) throw new Error(result.errors);
       localStorage.removeItem("jwtToken");
@@ -20,7 +23,9 @@ const SignUp = () => {
       toastMessage.success("Welcome!");
       return navigate("/");
     } catch (err) {
-      toastMessage.error(err);
+      if (err.message.includes("token"))
+        return toastMessage.error("此信箱已被註冊");
+      toastMessage.error("請輸入正確格式");
     }
   };
   return (

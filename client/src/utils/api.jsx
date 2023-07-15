@@ -262,5 +262,15 @@ const api = {
     const result = await response.json();
     return result;
   },
+  GetUser: async (token) => {
+    const response = await fetch(`${hostName}${version}/user/profile`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const result = await response.json();
+    return result;
+  },
 };
 export default api;

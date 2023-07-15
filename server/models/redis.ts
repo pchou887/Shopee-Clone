@@ -15,7 +15,12 @@ export const pubsub = new Redis({
   username: process.env.REDIS_USER,
   password: process.env.REDIS_PASSWORD,
 });
-
+export const queue = new Redis({
+  port: 6379,
+  host: process.env.REDIS_HOST,
+  username: process.env.REDIS_USER,
+  password: process.env.REDIS_PASSWORD,
+});
 export const getStr = async (key: string) => {
   const result = await redis.get(key);
   return result;

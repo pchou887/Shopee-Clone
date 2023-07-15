@@ -1,6 +1,7 @@
 import * as redisModel from "../models/redis.js";
 
 const pubsubClient = redisModel.pubsub;
+const queueClient = redisModel.queue;
 
 const sleep = async (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -12,20 +13,13 @@ const userToOrderPage = async () => {
     try {
       const orderingNumber = Number(await redisModel.getStr("ordering"));
       if (orderingNumber < 5) {
-        const user = await redisModel.bpopminZset(`queue`);
+        const user = await queueClient.bzpopmin(`queue`, 0);
         if (!Array.isArray(user)) {
           continue;
         }
-
         const userId = user[1].replace("queue:", "");
         const userOrderStr = await redisModel.getStr(`userOrder:${userId}`);
-        const orderingQueue = await redisModel.getZsetWithScores("order");
-        if (!userOrderStr) throw new Error("you didn't in queue");
-        if (orderingQueue.length && orderingQueue.includes(userId)) {
-          throw new Error(
-            `You already have this product order. Please wait or go to order page. ${userId}`
-          );
-        }
+        if (!userOrderStr) throw new Error(`你並沒有在列隊當中 ${userId}`);
         const userOrder = JSON.parse(userOrderStr);
         const expireTime = new Date().getTime() + 1 * 60 * 1000;
         await redisModel.incrStr("ordering");
@@ -53,6 +47,7 @@ const userToOrderPage = async () => {
         };
         pubsubClient.publish("error", JSON.stringify(data));
       }
+      await sleep(1000);
       continue;
     }
   }

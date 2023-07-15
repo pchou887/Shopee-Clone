@@ -140,9 +140,17 @@
   width: 96px;
 }
 .order-address-details-second {
+  display: flex;
   width: 250px;
 }
+.order-address-details-second-name {
+  width: 125px;
+}
+.order-address-details-second-phone {
+  width: 125px;
+}
 .order-address-details-third {
+  align-self: start;
   width: 250px;
 }
 .order-address-details-fourth {

@@ -21,7 +21,23 @@ function Product() {
     socket.on("wait", (data) => {
       toastMessage.warn("現在人數眾多請稍待片刻");
     });
-
+    socket.on("hadOrder", ({ order, expire }) => {
+      toastMessage.warn("你已經有訂單了!");
+      const sendData = {
+        name: order.name,
+        storeId: order.store_id,
+        image: order.main_image,
+        productId: order.id,
+        amount: order.amount,
+        variantId: order.variantId,
+        kind: order.kind,
+        price: order.price,
+        stock: order.stock,
+        expire: new Date(Number(expire)).toLocaleString(),
+      };
+      localStorage.setItem("snapUpProduct", JSON.stringify([sendData]));
+      navigate("/snapup/order");
+    });
     socket.on("error", (err) => {
       if (err.message.includes("jwt")) {
         toastMessage.error("請先登入");
@@ -104,6 +120,14 @@ function Product() {
     }
     if (!variantId) {
       toastMessage.error("請選擇至少一樣商品!");
+      return;
+    }
+    if (
+      product.variants.some(
+        (ele) => ele.stock === variantId && amount > ele.stock
+      )
+    ) {
+      toastMessage.error("庫存不足");
       return;
     }
     setIsLoad(true);

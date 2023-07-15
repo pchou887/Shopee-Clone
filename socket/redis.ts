@@ -1,6 +1,8 @@
 import { Redis } from "ioredis";
 import dotenv from "dotenv";
+
 dotenv.config();
+
 export const redis = new Redis({
   port: 6379,
   host: process.env.REDIS_HOST,
@@ -49,11 +51,7 @@ export const setZset = async (key: string, value: number, member: string) => {
   return result;
 };
 
-export const getZset = async (key: string) => {
-  const result = await redis.zrange(key, 0, -1);
-  return result;
-};
-
-export const incrZset = async (key: string, incr: number, member: string) => {
-  await redis.zincrby(key, incr, member);
+export const getZsetMemberScore = async (key: string, member: string) => {
+  const result = await redis.zmscore(key, member);
+  return result[0];
 };

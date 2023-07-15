@@ -9,7 +9,7 @@ function ProductPage() {
   const [product, setProduct] = useState("");
   const [variantId, setVariantId] = useState("");
   const [store, setStore] = useState("");
-  const [amount, setAmount] = useState(1);
+  const [amount, setAmount] = useState(0);
   const [open, setOpen] = useState(false);
   const [storeChat, setStoreChat] = useState("");
   const navigate = useNavigate();
@@ -63,6 +63,18 @@ function ProductPage() {
   function sendOrder() {
     if (!variantId) {
       toastMessage.error("請選擇至少一樣商品!");
+      return;
+    }
+    if (
+      product.variants.some(
+        (ele) => ele.stock === variantId && amount > ele.stock
+      )
+    ) {
+      toastMessage.error("庫存不足!");
+      return;
+    }
+    if (amount === 0) {
+      toastMessage.error("請選擇數量");
       return;
     }
     const variant = product.variants.filter(

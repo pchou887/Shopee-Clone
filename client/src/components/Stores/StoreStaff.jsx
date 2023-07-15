@@ -27,7 +27,6 @@ function StoreStaff({
   const [filterData, setFilterData] = useState(data);
   const [filterRole, setFilterRole] = useState({});
   useLayoutEffect(() => {
-    setIsLoad(true);
     const user = JSON.parse(localStorage.getItem("user"));
     const userId = user.id;
     const filterOwnId = data.filter(
@@ -41,7 +40,6 @@ function StoreStaff({
     }, {});
     setFilterData(filterOwnId);
     setFilterRole(filterOwnRole);
-    setIsLoad(false);
   }, [data]);
   const handleStaffClick = (id) => {
     setActiveStaff(id);
@@ -52,6 +50,7 @@ function StoreStaff({
     setActiveRole(id);
   };
   const changeRoleClick = async (e) => {
+    setIsLoad(true);
     const token = localStorage.getItem("jwtToken");
     try {
       const result = await api.ChangeRole(
@@ -65,6 +64,8 @@ function StoreStaff({
     } catch (err) {
       console.log(err);
       toastMessage.error("請確認您的權限!");
+    } finally {
+      setIsLoad(false);
     }
   };
   return (
@@ -105,7 +106,6 @@ function StoreStaff({
         <h3 style={{ textAlign: "center", paddingBottom: 20 }}>
           請選擇想變更權限
         </h3>
-        {isLoad ? <Loading /> : ""}
         {activeStaff &&
           filterRole[targetStaff] &&
           filterRole[targetStaff][0].map((ele) => (
@@ -122,11 +122,21 @@ function StoreStaff({
               <p className="role-name">{ele[1]}</p>
             </div>
           ))}
-        {targetRole && (
-          <button className="store-change-role" onClick={changeRoleClick}>
-            確認變更
-          </button>
-        )}
+        {targetRole &&
+          (isLoad ? (
+            <Loading
+              style={{
+                margin: "auto",
+                paddingTop: "6rem",
+                height: 75,
+                width: 200,
+              }}
+            />
+          ) : (
+            <button className="store-change-role" onClick={changeRoleClick}>
+              確認變更
+            </button>
+          ))}
       </div>
     </div>
   );

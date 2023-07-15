@@ -5,6 +5,7 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import { Button, Form, Input, InputNumber, Select, Upload, Space } from "antd";
+import Loading from "../Loading";
 import api from "../../utils/api";
 import toastMessage from "../../utils/toast";
 
@@ -44,9 +45,11 @@ function isLengthLimit(name, variants) {
   return strLengthArr.some((ele) => ele > 20);
 }
 function CreateProduct({ storeId }) {
+  const [isLoad, setIsLoad] = useState(false);
   const [main, setMain] = useState([]);
   const [images, setImages] = useState([]);
   async function onFinish(values) {
+    setIsLoad(true);
     try {
       const token = localStorage.getItem("jwtToken");
       if (!values.variants || !values.variants.length) {
@@ -73,6 +76,8 @@ function CreateProduct({ storeId }) {
       toastMessage.success("創建成功");
     } catch (err) {
       toastMessage.error(err.message);
+    } finally {
+      setIsLoad(false);
     }
   }
   const mainProps = {
@@ -206,11 +211,15 @@ function CreateProduct({ storeId }) {
             )}
           </Form.List>
         </div>
-        <Form.Item>
-          <Button type="primary" htmlType="submit">
-            Submit
-          </Button>
-        </Form.Item>
+        {isLoad ? (
+          <Loading />
+        ) : (
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        )}
       </Form>
     </div>
   );

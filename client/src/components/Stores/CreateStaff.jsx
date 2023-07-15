@@ -1,6 +1,7 @@
 import { useState } from "react";
 import toastMessage from "../../utils/toast";
 import api from "../../utils/api";
+import Loading from "../Loading";
 const ROLE_NAME = [
   [2, "總經理"],
   [3, "產品主管"],
@@ -18,11 +19,13 @@ function CreateStaff({
   targetRole,
   setTargetRole,
 }) {
+  const [isLoad, setIsLoad] = useState(false);
   const [email, setEmail] = useState("");
   const handleRoleClick = (id) => {
     setActiveRole(id);
   };
-  const changeRoleClick = async () => {
+  const addStaffClick = async () => {
+    setIsLoad(true);
     const token = localStorage.getItem("jwtToken");
     try {
       const result = await api.CreateStaff(email, storeId, targetRole, token);
@@ -30,8 +33,11 @@ function CreateStaff({
       if (result.errors) throw new Error(result.errors);
       toastMessage.success("新增員工成功!");
     } catch (err) {
-      console.log(err.message);
+      if (err.message.includes("working"))
+        return toastMessage.error("此人已是這裡的員工");
       toastMessage.error("請輸入正確格式!");
+    } finally {
+      setIsLoad(false);
     }
   };
   return (
@@ -71,11 +77,21 @@ function CreateStaff({
               <p className="role-name">{ele[1]}</p>
             </div>
           ))}
-          {targetRole && (
-            <button className="store-change-role" onClick={changeRoleClick}>
-              確認變更
-            </button>
-          )}
+          {targetRole &&
+            (isLoad ? (
+              <Loading
+                style={{
+                  margin: "auto",
+                  paddingTop: "6rem",
+                  height: 75,
+                  width: 200,
+                }}
+              />
+            ) : (
+              <button className="store-change-role" onClick={addStaffClick}>
+                確認加入
+              </button>
+            ))}
         </div>
       </div>
     </>
