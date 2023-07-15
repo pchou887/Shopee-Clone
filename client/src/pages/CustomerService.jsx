@@ -28,18 +28,22 @@ function CustomerService() {
       setChats([...result.data]);
     }
     async function checkPermission() {
-      const result = await api.GetStoreOwnRole(id, token);
-      if (result.errors.includes("jwt")) {
-        localStorage.removeItem("jwtToken");
-        localStorage.removeItem("user");
-        toastMessage.error("登入超時");
-        return navigate("/login");
+      try {
+        const result = await api.GetStoreOwnRole(id, token);
+        if (result.errors) throw new Error(result.errors);
+        if (!checkRoles.CustomerService(result.data.roles)) {
+          toastMessage.error("你沒有權限可以訪問該網站");
+          return navigate(`/store/${id}`);
+        }
+        setStore(result.data);
+      } catch (err) {
+        if (err.message.includes("jwt")) {
+          localStorage.removeItem("jwtToken");
+          localStorage.removeItem("user");
+          toastMessage.error("登入超時");
+          return navigate("/login");
+        }
       }
-      if (!checkRoles.CustomerService(result.data.roles)) {
-        toastMessage.error("你沒有權限可以訪問該網站");
-        return navigate(`/store/${id}`);
-      }
-      setStore(result.data);
     }
     getChats();
     checkPermission();

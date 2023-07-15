@@ -30,6 +30,7 @@ function DeleteStaff({
     setIsLoad(true);
     setCheckMessage("");
     if (checkMessage !== "刪除") {
+      setIsLoad(false);
       toastMessage.error("請輸入正確格式");
       return;
     }
