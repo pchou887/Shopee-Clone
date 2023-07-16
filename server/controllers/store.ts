@@ -160,14 +160,3 @@ export const getStoreStaff = async (req: Request, res: Response) => {
     res.status(500).json({ errors: "something wrong" });
   }
 };
-
-export const deleteStore = async (req: Request, res: Response) => {
-  try {
-  } catch (err) {
-    if (err instanceof Error) {
-      res.status(500).json({ errors: err.message });
-      return;
-    }
-    res.status(500).json({ errors: "Oops! unknow wrong" });
-  }
-};

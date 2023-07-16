@@ -272,5 +272,22 @@ const api = {
     const result = await response.json();
     return result;
   },
+  DeleteProduct: async (productId, storeId, token) => {
+    const response = await fetch(
+      `${hostName}${version}/product/${productId}/delete`,
+      {
+        method: "DELETE",
+        headers: new Headers({
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({
+          store_id: storeId,
+        }),
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
 };
 export default api;

@@ -10,12 +10,14 @@ import StoreStaff from "../components/Stores/StoreStaff";
 import CustomerService from "../components/Stores/CustomerService";
 import CreateStaff from "../components/Stores/CreateStaff";
 import DeleteStaff from "../components/Stores/DeleteStaff";
+import DeleteProduct from "../components/Stores/DeleteProduct";
 
 function Store() {
   const userData = JSON.parse(localStorage.getItem("user"));
   const { id } = useParams();
   const [menu, setMenu] = useState("");
   const [products, setProducts] = useState("");
+  const [targetProduct, setTargetProduct] = useState("");
   const [staff, setStaff] = useState("");
   const [targetStaff, setTargetStaff] = useState("");
   const [activeStaff, setActiveStaff] = useState(null);
@@ -36,6 +38,7 @@ function Store() {
     setTargetStaff("");
     setActiveRole(null);
     setTargetRole("");
+    setTargetProduct("");
   };
   useLayoutEffect(() => {
     const token = localStorage.getItem("jwtToken");
@@ -75,10 +78,20 @@ function Store() {
           <StoreMenu onClick={onClick} roles={roles} />
           {menu === "1" && products && <StoreProduct products={products} />}
           {menu === "2" && <CreateProduct storeId={Number(id)} />}
+          {menu === "3" && (
+            <DeleteProduct
+              storeId={Number(id)}
+              products={products}
+              setProducts={setProducts}
+              targetProduct={targetProduct}
+              setTargetProduct={setTargetProduct}
+            />
+          )}
           {menu === "5" && (
             <StoreStaff
               data={staff}
               storeId={Number(id)}
+              setStaff={setStaff}
               activeStaff={activeStaff}
               setActiveStaff={setActiveStaff}
               activeRole={activeRole}
@@ -92,6 +105,8 @@ function Store() {
           {menu === "6" && (
             <CreateStaff
               storeId={Number(id)}
+              staff={staff}
+              setStaff={setStaff}
               activeRole={activeRole}
               setActiveRole={setActiveRole}
               targetRole={targetRole}
@@ -102,6 +117,7 @@ function Store() {
             <DeleteStaff
               data={staff}
               storeId={Number(id)}
+              setStaff={setStaff}
               activeStaff={activeStaff}
               setActiveStaff={setActiveStaff}
               targetStaff={targetStaff}
