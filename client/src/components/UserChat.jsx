@@ -16,8 +16,9 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
   const [chatStoreId, setChatStoreId] = useState("");
   const navigate = useNavigate();
   useEffect(() => {
-    socket.emit("userConnect", { userId: user.id });
     const token = localStorage.getItem("jwtToken");
+    if (!token || !user) return navigate("/");
+    socket.emit("userConnect", { userId: user.id });
     async function getChats() {
       try {
         const result = await api.GetUserChat(token);
@@ -54,7 +55,7 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
   useEffect(() => {
     socket.on("toUser", (data) => {
       const { storeId, storeName, from } = data;
-      if (data.from === chatStoreId) {
+      if (storeId === chatStoreId) {
         setChatRoom([...chatRoom, { from, content: data.message }]);
         setTimeout(() => {
           messageContainerRef.current?.scrollIntoView({
@@ -103,7 +104,8 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
     }
     getChatMessage();
   }, [chatStoreId]);
-  function sendMessage() {
+  function sendMessage(e) {
+    e.preventDefault();
     setMessage("");
     setChatRoom([...chatRoom, { from: user.id, content: message }]);
 
@@ -186,24 +188,24 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
                   )}
                 <div ref={messageContainerRef}></div>
               </div>
-              <div className="chat-area-content-room-input">
+              <form
+                className="chat-area-content-room-input"
+                onSubmit={sendMessage}
+              >
                 <input
                   type="text"
                   className="chat-area-content-room-inputbox"
                   placeholder="輸入文字"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") sendMessage();
-                  }}
                 />
-                <div
+                <button
                   className="chat-area-content-room-input-send"
-                  onClick={sendMessage}
+                  type="submit"
                 >
                   傳送
-                </div>
-              </div>
+                </button>
+              </form>
             </div>
           )}
         </div>

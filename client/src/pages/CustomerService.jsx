@@ -132,7 +132,8 @@ function CustomerService() {
     };
   }, [serverId, chats, roomMessage]);
 
-  function sendMessage() {
+  function sendMessage(e) {
+    e.preventDefault();
     setRoomMessage([...roomMessage, { from: staffId, content: message }]);
     setMessage("");
     socket.emit("toUser", {
@@ -164,13 +165,13 @@ function CustomerService() {
                 onClick={() => {
                   if (serverId) {
                     socket.emit("staffLeaveRoom", {
-                      room: `${id}:${serverId}`,
+                      room: `store_${id}-user_${serverId}`,
                       storeId: id,
                       userId: user.id,
                     });
                   }
                   socket.emit("customerService", {
-                    room: `${id}:${ele.user_id}`,
+                    room: `store_${id}-user_${ele.user_id}`,
                     storeId: id,
                     userId: user.id,
                   });
@@ -198,20 +199,25 @@ function CustomerService() {
               )
             )}
           {roomMessage && (
-            <div className="cs-chatroom-input">
+            <form className="cs-chatroom-input" onSubmit={sendMessage}>
               <input
                 type="text"
+                name="message"
                 className="cs-chatroom-inputbox"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendMessage();
-                }}
               />
-              <div className="cs-chatroom-input-btn" onClick={sendMessage}>
+              <button
+                type="submit"
+                className="cs-chatroom-input-btn"
+                style={{
+                  marginTop: 5,
+                  border: "1px solid rgba(0, 0, 0, 0.09)",
+                }}
+              >
                 傳送
-              </div>
-            </div>
+              </button>
+            </form>
           )}
           <div ref={messageContainerRef}></div>
         </div>

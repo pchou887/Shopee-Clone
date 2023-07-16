@@ -18,6 +18,11 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+app.get("/", (req, res) => {
+  res.status(200).send("socket server");
+});
+
 const pubsubClient = redisModel.pubsub;
 
 io.on("connection", (socket) => {

@@ -9,7 +9,8 @@ const SignUp = () => {
   const [name, setName] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
       if (!name) return toastMessage.error("請輸入帳號名稱");
       if (!email) return toastMessage.error("請輸入信箱");
@@ -31,7 +32,7 @@ const SignUp = () => {
   return (
     <div className="login">
       <h2 className="login-title">加入會員</h2>
-      <div className="form">
+      <form className="form" onSubmit={handleSubmit}>
         <label htmlFor="name">名字：</label>
         <input
           type="text"
@@ -50,10 +51,10 @@ const SignUp = () => {
           id="password"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button id="sign-up-btn" onClick={handleSubmit}>
+        <button id="sign-up-btn" type="submit">
           註冊
         </button>
-      </div>
+      </form>
     </div>
   );
 };
