@@ -40,6 +40,9 @@ io.on("connection", (socket) => {
       }
       if (userOrderStr) {
         const userOrder = JSON.parse(userOrderStr);
+        const orderQueue = await redisModel.getZset("order");
+        if (!orderQueue.includes(`${userId}`))
+          throw new Error("你正在排隊，請不要重複發送訂單");
         const productStr = await redisModel.getStr(
           `snapUp:${userOrder.productId}`
         );
@@ -67,23 +70,25 @@ io.on("connection", (socket) => {
           order,
           expire: expireTimeCheck,
         });
-        return;
+      } else {
+        const newQty = await redisModel.decrByStr(`stock:${variantId}`, amount);
+        if (newQty < 0) {
+          await redisModel.incrByStr(`stock:${variantId}`, amount);
+          throw new Error(`庫存不足 ${userId}`);
+        }
+        socket.leave(socket.id);
+        const numberPlate = await redisModel.incrStr(`number_plate`);
+        await redisModel.setZset(`queue`, numberPlate, `queue:${userId}`);
+        await redisModel.setStr(
+          `userOrder:${userId}`,
+          JSON.stringify({ productId, variantId, amount })
+        );
+        if (!(await redisModel.getStr("ordering")))
+          await redisModel.setStr("ordering", "0");
+        io.to(`buy:${userId}`).emit("wait", {
+          message: "please wait a minute.",
+        });
       }
-      const newQty = await redisModel.decrByStr(`stock:${variantId}`, amount);
-      if (newQty < 0) {
-        await redisModel.incrByStr(`stock:${variantId}`, amount);
-        throw new Error(`庫存不足 ${userId}`);
-      }
-      socket.leave(socket.id);
-      const numberPlate = await redisModel.incrStr(`number_plate`);
-      await redisModel.setZset(`queue`, numberPlate, `queue:${userId}`);
-      await redisModel.setStr(
-        `userOrder:${userId}`,
-        JSON.stringify({ productId, variantId, amount })
-      );
-      if (!(await redisModel.getStr("ordering")))
-        await redisModel.setStr("ordering", "0");
-      io.to(`buy:${userId}`).emit("wait", { message: "please wait a minute." });
     } catch (err) {
       if (err instanceof Error) {
         io.to(socket.id).emit("error", { message: err.message });

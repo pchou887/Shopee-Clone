@@ -51,6 +51,11 @@ export const setZset = async (key: string, value: number, member: string) => {
   return result;
 };
 
+export const getZset = async (key: string) => {
+  const result = await redis.zrange(key, 0, -1);
+  return result;
+};
+
 export const getZsetMemberScore = async (key: string, member: string) => {
   const result = await redis.zmscore(key, member);
   return result[0];
