@@ -13,7 +13,7 @@ const userToOrderPage = async () => {
     try {
       const orderingNumber = Number(await redisModel.getStr("ordering"));
       if (orderingNumber < 5) {
-        const user = await queueClient.bzpopmin(`queue`, 0);
+        const user = await queueClient.bzpopmin(`queue`, 1);
         if (!Array.isArray(user)) {
           continue;
         }
@@ -21,10 +21,11 @@ const userToOrderPage = async () => {
         const userOrderStr = await redisModel.getStr(`userOrder:${userId}`);
         if (!userOrderStr) throw new Error(`你並沒有在列隊當中 ${userId}`);
         const userOrder = JSON.parse(userOrderStr);
+        const amount = Number(userOrder.amount);
         const expireTime = new Date().getTime() + 1 * 60 * 1000;
         await redisModel.incrStr("ordering");
+        await redisModel.decrByStr(`stock:${userOrder.variantId}`, amount);
         await redisModel.setZset("order", expireTime, userId);
-        const amount = Number(userOrder.amount);
         const data = {
           message: "turn to you visit order page",
           id: userId,

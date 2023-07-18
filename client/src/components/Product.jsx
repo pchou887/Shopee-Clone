@@ -175,7 +175,11 @@ function Product({
         <div className="description">
           <div className="product-description">
             <div className="description-title">商品描述</div>
-            <div className="description-content">{product.description}</div>
+            <div className="description-content">
+              {product.description.split("\n").map((ele, index) => (
+                <p key={index}>{ele}</p>
+              ))}
+            </div>
           </div>
         </div>
       )}

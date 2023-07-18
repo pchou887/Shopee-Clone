@@ -14,7 +14,14 @@ function StoreProduct({ products }) {
             style={{ width: 240 }}
             cover={<img alt={ele.name} src={ele.main_image} />}
           >
-            <Meta title={ele.name} description={ele.description} />
+            <Meta
+              title={ele.name}
+              description={
+                ele.description.length > 10
+                  ? `${ele.description.replace("\n", " ").substr(0, 10)}...`
+                  : ele.description
+              }
+            />
           </Card>
         </Link>
       ))}

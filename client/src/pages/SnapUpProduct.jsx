@@ -16,10 +16,11 @@ function Product() {
   const [stock, setStock] = useState("");
   const [amount, setAmount] = useState(1);
   const navigate = useNavigate();
-
   useEffect(() => {
-    socket.on("wait", (data) => {
-      toastMessage.warn("現在人數眾多請稍待片刻");
+    socket.on("wait", async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
+      if (window.location.pathname !== "/snapup/order")
+        toastMessage.warn("現在人數眾多請稍等");
     });
     socket.on("hadOrder", ({ order, expire }) => {
       toastMessage.warn("你已經有訂單了!");
@@ -51,7 +52,6 @@ function Product() {
       socket.off("error");
     };
   }, []);
-
   useEffect(() => {
     async function getProduct() {
       try {

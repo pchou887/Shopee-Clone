@@ -321,6 +321,13 @@ export async function snapUpCheckout(req: Request, res: Response) {
     const { id, qty, variantId } = list;
     const userOrderStr = await redisModel.getStr(`userOrder:${userId}`);
     if (!userOrderStr) throw new ValidationError("invalid order");
+    const nowTime = new Date().getTime();
+    const expireTime = await redisModel.getZsetMemberScore(
+      "order",
+      `${userId}`
+    );
+    if (!expireTime || nowTime > Number(expireTime))
+      throw new ValidationError("order timeout");
     const userOrder = JSON.parse(userOrderStr);
     if (
       userOrder.productId !== id &&

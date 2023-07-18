@@ -7,7 +7,7 @@ import toastMessage from "../utils/toast";
 const URL = import.meta.env.VITE_DEV_HOST_NAME || "";
 
 function UserChat({ open, setOpen, storeChat, setStoreChat }) {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState("");
   const [socket] = useState(() => io(URL));
   const messageContainerRef = useRef(null);
   const [chats, setChats] = useState("");
@@ -17,7 +17,9 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
   const navigate = useNavigate();
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
-    if (!token || !user) return navigate("/");
+    const userLocal = localStorage.getItem("user");
+    if (!token || !userLocal) return navigate("/");
+    setUser(JSON.parse(userLocal));
     socket.emit("userConnect", { userId: user.id });
     async function getChats() {
       try {
@@ -45,7 +47,7 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
         if (err.message.includes("jwt")) {
           localStorage.removeItem("jwtToken");
           localStorage.removeItem("user");
-          toastMessage.error("請先登入");
+          toastMessage.error("登入超時");
           return navigate("/login");
         }
       }

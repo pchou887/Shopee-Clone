@@ -76,13 +76,14 @@ io.on("connection", (socket) => {
           await redisModel.incrByStr(`stock:${variantId}`, amount);
           throw new Error(`庫存不足 ${userId}`);
         }
+        await redisModel.incrByStr(`stock:${variantId}`, amount);
         socket.leave(socket.id);
         const numberPlate = await redisModel.incrStr(`number_plate`);
-        await redisModel.setZset(`queue`, numberPlate, `queue:${userId}`);
         await redisModel.setStr(
           `userOrder:${userId}`,
           JSON.stringify({ productId, variantId, amount })
         );
+        await redisModel.setZset(`queue`, numberPlate, `queue:${userId}`);
         if (!(await redisModel.getStr("ordering")))
           await redisModel.setStr("ordering", "0");
         io.to(`buy:${userId}`).emit("wait", {

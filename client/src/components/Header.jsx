@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Menu from "./Menu";
+import toastMessage from "../utils/toast";
 function Header() {
   const navigate = useNavigate();
   const token = localStorage.getItem("jwtToken");
@@ -8,6 +9,7 @@ function Header() {
   function handleLogout() {
     localStorage.removeItem("jwtToken");
     localStorage.removeItem("user");
+    toastMessage.success("登出成功");
     navigate("/");
   }
   function goLogin() {
