@@ -1,6 +1,6 @@
-import { ResultSetHeader } from "mysql2";
 import { z } from "zod";
 import pool from "./dbPool.js";
+import instanceOfSetHeader from "../utils/instanceOfSetHeader.js";
 
 /*
   id bigint unsigned NOT NULL AUTO_INCREMENT
@@ -27,13 +27,13 @@ const ProductSchema = z.object({
 });
 
 export const PAGE_COUNT = 30;
-export async function getProducts({
+export const getProducts = async ({
   paging = 0,
   category,
 }: {
   paging: number;
   category: string;
-}) {
+}) => {
   const results = await pool.query(
     `
     SELECT id, store_id, category, name, description FROM products
@@ -49,9 +49,9 @@ export async function getProducts({
   );
   const products = z.array(ProductSchema).parse(results[0]);
   return products;
-}
+};
 
-export async function getProduct(id: number) {
+export const getProduct = async (id: number) => {
   const results = await pool.query(
     `
     SELECT id, store_id, category, name, description FROM products
@@ -61,15 +61,15 @@ export async function getProduct(id: number) {
   );
   const products = z.array(ProductSchema).parse(results[0]);
   return products;
-}
+};
 
-export async function searchProducts({
+export const searchProducts = async ({
   paging = 0,
   keyword,
 }: {
   paging: number;
   keyword: string;
-}) {
+}) => {
   const results = await pool.query(
     `
     SELECT id, store_id, category, name, description FROM products
@@ -81,7 +81,7 @@ export async function searchProducts({
   );
   const products = z.array(ProductSchema).parse(results[0]);
   return products;
-}
+};
 
 const ProductCountSchema = z.object({
   count: z.number(),
@@ -89,17 +89,17 @@ const ProductCountSchema = z.object({
 
 type ProductCount = z.infer<typeof ProductCountSchema>;
 
-function instanceOfProductCount(object: any): object is ProductCount {
+const instanceOfProductCount = (object: any): object is ProductCount => {
   return "count" in object;
-}
+};
 
-export async function countProducts({
+export const countProducts = async ({
   category,
   keyword,
 }: {
   category?: string;
   keyword?: string;
-}) {
+}) => {
   const results = await pool.query(
     `
   SELECT COUNT(id) AS count
@@ -118,9 +118,9 @@ export async function countProducts({
     return productCount.count;
   }
   return 0;
-}
+};
 
-export async function countStoreProducts({ storeId }: { storeId: number }) {
+export const countStoreProducts = async ({ storeId }: { storeId: number }) => {
   const results = await pool.query(
     `SELECT COUNT(id) AS count FROM products WHERE store_id = ? AND is_remove = false`,
     [storeId]
@@ -130,18 +130,14 @@ export async function countStoreProducts({ storeId }: { storeId: number }) {
     return productCount.count;
   }
   return 0;
-}
+};
 
-function instanceOfSetHeader(object: any): object is ResultSetHeader {
-  return "insertId" in object;
-}
-
-export async function createProduct(productData: {
+export const createProduct = async (productData: {
   store_id: number;
   category: string;
   name: string;
   description: string;
-}) {
+}) => {
   try {
     const { store_id, category, name, description } = productData;
     const results = await pool.query(
@@ -158,29 +154,14 @@ export async function createProduct(productData: {
     console.error(err);
     return null;
   }
-}
-
-export async function isProductExist(productId: number) {
-  const results = await pool.query(
-    `
-    SELECT COUNT(id) AS count FROM products
-    WHERE id = ? AND is_remove = false
-  `,
-    [productId]
-  );
-  if (Array.isArray(results[0]) && instanceOfProductCount(results[0][0])) {
-    const productCount = ProductCountSchema.parse(results[0][0]);
-    return productCount.count === 1;
-  }
-  return false;
-}
+};
 
 const PartialProductSchema = z.object({
   id: z.number(),
   name: z.string(),
 });
 
-export async function getProductsByIds(ids: number[]) {
+export const getProductsByIds = async (ids: number[]) => {
   const results = await pool.query(
     `
     SELECT id, name FROM products
@@ -190,7 +171,7 @@ export async function getProductsByIds(ids: number[]) {
   );
   const products = z.array(PartialProductSchema).parse(results[0]);
   return products;
-}
+};
 
 export const updateProduct = async (productData: {
   id: number;
@@ -209,13 +190,13 @@ export const updateProduct = async (productData: {
   );
 };
 
-export async function getStoreProducts({
+export const getStoreProducts = async ({
   paging = 0,
   storeId,
 }: {
   paging: number;
   storeId: number;
-}) {
+}) => {
   const results = await pool.query(
     `
     SELECT id, store_id, category, name, description FROM products
@@ -227,7 +208,7 @@ export async function getStoreProducts({
   );
   const products = z.array(ProductSchema).parse(results[0]);
   return products;
-}
+};
 
 export const getOrderProductsByStoreId = async (
   productIds: number[],

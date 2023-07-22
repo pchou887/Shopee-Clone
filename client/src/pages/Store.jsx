@@ -47,8 +47,7 @@ function Store() {
         const storeProducts = await api.GetStoreProducts(id);
         const storeOwnRole = await api.GetStoreOwnRole(id, token);
         const storeStaff = await api.GetStoreStaff(id, token);
-        const errors =
-          storeStaff.errors || storeOwnRole.errors || storeProducts.errors;
+        const errors = storeProducts.errors || storeOwnRole.errors;
         if (errors) throw new Error(errors);
         setProducts(storeProducts.data);
         setRoles({

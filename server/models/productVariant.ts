@@ -10,14 +10,14 @@ import pool from "./dbPool.js";
   price int unsigned NOT NULL
 */
 
-export async function createProductVariants(
+export const createProductVariants = async (
   variantData: {
     productId: number;
     kind: string;
     stock: number;
     price: number;
   }[]
-) {
+) => {
   try {
     await pool.query(
       `
@@ -35,7 +35,7 @@ export async function createProductVariants(
     console.error(err);
     return null;
   }
-}
+};
 
 const ProductVariantSchema = z.object({
   id: z.number(),
@@ -47,7 +47,7 @@ const ProductVariantSchema = z.object({
 
 type ProductVariant = z.infer<typeof ProductVariantSchema>;
 
-export async function getProductVariantsByProductId(productIds: number[]) {
+export const getProductVariantsByProductId = async (productIds: number[]) => {
   if (productIds.length === 0) return [];
   const result = await pool.query(
     `
@@ -59,9 +59,9 @@ export async function getProductVariantsByProductId(productIds: number[]) {
   );
   const productVariants = z.array(ProductVariantSchema).parse(result[0]);
   return productVariants;
-}
+};
 
-export async function getProductVariantsById(varaintIds: number[]) {
+export const getProductVariantsById = async (varaintIds: number[]) => {
   if (varaintIds.length === 0) return [];
   const result = await pool.query(
     `
@@ -73,12 +73,12 @@ export async function getProductVariantsById(varaintIds: number[]) {
   );
   const productVariants = z.array(ProductVariantSchema).parse(result[0]);
   return productVariants;
-}
+};
 
-export async function getProductVariantsByProductVariantIds(
+export const getProductVariantsByProductVariantIds = async (
   productIds: number[],
   varaintIds: number[]
-) {
+) => {
   if (varaintIds.length === 0) return [];
   const result = await pool.query(
     `
@@ -90,37 +90,40 @@ export async function getProductVariantsByProductVariantIds(
   );
   const productVariants = z.array(ProductVariantSchema).parse(result[0]);
   return productVariants;
-}
+};
 
-export function groupVariants(productVariants: ProductVariant[]) {
-  const result = productVariants.reduce(function (
-    obj: {
-      [productId: string]: {
-        variants: {
-          variantId: number;
-          kind: string;
-          stock: number;
-          price: number;
-        }[];
-      };
+export const groupVariants = (productVariants: ProductVariant[]) => {
+  const result = productVariants.reduce(
+    (
+      obj: {
+        [productId: string]: {
+          variants: {
+            variantId: number;
+            kind: string;
+            stock: number;
+            price: number;
+          }[];
+        };
+      },
+      variant
+    ) => {
+      if (!obj[variant.product_id]) {
+        obj[variant.product_id] = {
+          variants: [],
+        };
+      }
+      obj[variant.product_id].variants.push({
+        variantId: variant.id,
+        kind: variant.kind,
+        stock: variant.stock,
+        price: variant.price,
+      });
+      return obj;
     },
-    variant
-  ) {
-    if (!obj[variant.product_id]) {
-      obj[variant.product_id] = {
-        variants: [],
-      };
-    }
-    obj[variant.product_id].variants.push({
-      variantId: variant.id,
-      kind: variant.kind,
-      stock: variant.stock,
-      price: variant.price,
-    });
-    return obj;
-  }, {});
+    {}
+  );
   return result;
-}
+};
 
 const VariantStockSchema = z.object({
   id: z.number(),
@@ -128,10 +131,10 @@ const VariantStockSchema = z.object({
   stock: z.number(),
 });
 
-export async function getVariantsStockWithLock(
+export const getVariantsStockWithLock = async (
   variantIds: number[],
   connection: Connection
-) {
+) => {
   const result = await connection.query(
     `
     SELECT id, product_id, stock FROM product_variants
@@ -142,12 +145,12 @@ export async function getVariantsStockWithLock(
   );
   const productVariants = z.array(VariantStockSchema).parse(result[0]);
   return productVariants;
-}
+};
 
-export async function updateVariantsStock(
+export const updateVariantsStock = async (
   variants: { id: number; stock: number }[],
   connection: Connection
-) {
+) => {
   await connection.query(
     `
       UPDATE product_variants SET stock = (
@@ -161,4 +164,4 @@ export async function updateVariantsStock(
     `,
     [variants.map(({ id }) => id)]
   );
-}
+};

@@ -198,6 +198,7 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
                   type="text"
                   className="chat-area-content-room-inputbox"
                   placeholder="輸入文字"
+                  autoComplete="off"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />

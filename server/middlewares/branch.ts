@@ -4,12 +4,13 @@ type Middleware = (req: Request, res: Response, next: NextFunction) => void;
 
 type TestFn = (req: Request, res: Response) => boolean;
 
-const branch = (
-  testFn: TestFn,
-  left: Middleware | Middleware[],
-  right?: Middleware | Middleware[]
-) =>
-  function middleware(req: Request, res: Response, next: NextFunction) {
+const branch =
+  (
+    testFn: TestFn,
+    left: Middleware | Middleware[],
+    right?: Middleware | Middleware[]
+  ) =>
+  (req: Request, res: Response, next: NextFunction) => {
     const execution = testFn(req, res) ? left : right;
 
     if (typeof execution === "undefined") {

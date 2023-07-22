@@ -8,18 +8,10 @@ import * as orderModel from "../models/order.js";
 import * as orderDetailModel from "../models/orderDetail.js";
 import * as userInfoModel from "../models/userInfo.js";
 import * as redisModel from "../models/redis.js";
-import {
-  getProductsByIds,
-  getOrderProductsByStoreId,
-} from "../models/product.js";
-import {
-  getProductVariantsById,
-  getProductVariantsByProductVariantIds,
-  getVariantsStockWithLock,
-  updateVariantsStock,
-} from "../models/productVariant.js";
+import * as productModel from "../models/product.js";
+import * as productImageModel from "../models/productImage.js";
+import * as productVariantModel from "../models/productVariant.js";
 import { ValidationError } from "../utils/errorHandler.js";
-import { getProductMainImage } from "../models/productImage.js";
 
 dotenv.config();
 
@@ -41,7 +33,7 @@ interface Recipient {
   address: string;
 }
 
-async function payByPrime({
+const payByPrime = async ({
   prime,
   recipient,
   amount,
@@ -53,7 +45,7 @@ async function payByPrime({
   amount: number;
   details: string;
   orderId: number;
-}) {
+}) => {
   const data = {
     prime,
     partner_key: TAPPAY_PARTNER_KEY,
@@ -85,7 +77,7 @@ async function payByPrime({
       throw err;
     });
   return result;
-}
+};
 
 interface ProductInput {
   id: number;
@@ -106,12 +98,12 @@ interface VariantMap {
   };
 }
 
-async function checkProducts(inputList: ProductInput[]): Promise<Product[]> {
+const checkProducts = async (inputList: ProductInput[]): Promise<Product[]> => {
   const productIds = inputList.map(({ id }) => Number(id));
   const varaintIds = inputList.map(({ variantId }) => Number(variantId));
   const [productsFromServer, variantsFromServer] = await Promise.all([
-    getProductsByIds(productIds),
-    getProductVariantsById(varaintIds),
+    productModel.getProductsByIds(productIds),
+    productVariantModel.getProductVariantsById(varaintIds),
   ]);
   const productsFromServerMap = keyBy(productsFromServer, "id");
   const variantsFromServerMap = keyBy(variantsFromServer, "id");
@@ -156,9 +148,9 @@ async function checkProducts(inputList: ProductInput[]): Promise<Product[]> {
       ...product,
     };
   });
-}
+};
 
-async function placeOrder({
+const placeOrder = async ({
   userId,
   orderInfo,
   recipient,
@@ -170,7 +162,7 @@ async function placeOrder({
   recipient: Recipient;
   products: Product[];
   connection: Connection;
-}) {
+}) => {
   const { shipping, payment, subtotal, freight, total } = orderInfo;
   const { name, address, phone } = recipient;
   connection.query("BEGIN");
@@ -197,9 +189,9 @@ async function placeOrder({
     connection.query("ROLLBACK");
     throw err;
   }
-}
+};
 
-async function confirmOrder({
+const confirmOrder = async ({
   orderId,
   amount,
   prime,
@@ -213,20 +205,22 @@ async function confirmOrder({
   products: Product[];
   recipient: Recipient;
   connection: Connection;
-}) {
+}) => {
   try {
     connection.query("BEGIN");
 
     const variantIds = products.map(({ variantId }) => variantId);
-    const variants = await getVariantsStockWithLock(variantIds, connection);
-    const variantsMapWithNewStock = products.reduce(function (
-      variantsMap: VariantMap,
-      product
-    ): VariantMap {
-      variantsMap[product.variantId].stock -= product.qty;
-      return variantsMap;
-    },
-    keyBy(variants, "id"));
+    const variants = await productVariantModel.getVariantsStockWithLock(
+      variantIds,
+      connection
+    );
+    const variantsMapWithNewStock = products.reduce(
+      (variantsMap: VariantMap, product): VariantMap => {
+        variantsMap[product.variantId].stock -= product.qty;
+        return variantsMap;
+      },
+      keyBy(variants, "id")
+    );
 
     if (
       Object.values(variantsMapWithNewStock).some(
@@ -236,7 +230,7 @@ async function confirmOrder({
       throw new Error("stock not enough!");
     }
 
-    await updateVariantsStock(
+    await productVariantModel.updateVariantsStock(
       Object.values(variantsMapWithNewStock),
       connection
     );
@@ -260,9 +254,9 @@ async function confirmOrder({
     connection.query("ROLLBACK");
     throw err;
   }
-}
+};
 
-export async function checkout(req: Request, res: Response) {
+export const checkout = async (req: Request, res: Response) => {
   const connection = await pool.getConnection();
   try {
     const userId = res.locals.userId;
@@ -310,8 +304,9 @@ export async function checkout(req: Request, res: Response) {
   } finally {
     connection.release();
   }
-}
-export async function snapUpCheckout(req: Request, res: Response) {
+};
+
+export const snapUpCheckout = async (req: Request, res: Response) => {
   const connection = await pool.getConnection();
   try {
     const userId = res.locals.userId;
@@ -378,20 +373,19 @@ export async function snapUpCheckout(req: Request, res: Response) {
   } finally {
     connection.release();
   }
-}
+};
 
-interface VariantWithImageShema {
-  id: number;
-  name: string;
+interface OrderVariantSchema {
   varaintId: number;
   kind: string;
   price: number;
   image: string;
+  id: number;
+  name: string;
 }
-interface OrderListVariantSchema extends VariantWithImageShema {
+interface OrderListSchema extends OrderVariantSchema {
   qty: number;
 }
-
 interface OrderSchema {
   order_id: number;
   payment: "cash" | "credit_card" | "ATM";
@@ -415,10 +409,45 @@ interface UserOrdersSchema {
   recipient: string;
   address: string;
   phone: string;
-  order_list: OrderListVariantSchema[];
+  order_list: OrderListSchema[];
 }
 
-const groupOrderList = (
+const groupProduct = (
+  products: {
+    id: number;
+    name: string;
+    image: string;
+  }[]
+) => {
+  return products.reduce(
+    (
+      obj: { [productId: number]: { id: number; name: string; image: string } },
+      ele
+    ) => {
+      obj[ele.id] = {
+        id: ele.id,
+        name: ele.name,
+        image: ele.image,
+      };
+      return obj;
+    },
+    {}
+  );
+};
+
+const mapImages = (imagesObj: {
+  [productId: string]: { main_image: string; images: string[] };
+}) => {
+  return <Product extends { id: number }>(product: Product) => ({
+    ...product,
+    image:
+      `https://d1a26cbu5iquck.cloudfront.net/${
+        imagesObj[product.id]?.main_image
+      }` ?? "",
+  });
+};
+
+const groupOrderVariant = (
   variants: {
     id: number;
     product_id: number;
@@ -426,59 +455,36 @@ const groupOrderList = (
     stock: number;
     price: number;
   }[],
-  productImages: {
-    product_id: number;
-    path: string;
-    type: string;
-    mimetype: string;
-  }[],
-  orders: OrderSchema[],
-  products: {
-    id: number;
-    name: string;
-  }[]
-): UserOrdersSchema[] => {
-  const productName = products.reduce(
-    (obj: { [productId: number]: string }, ele) => {
-      obj[ele.id] = ele.name;
-      return obj;
-    },
-    {}
-  );
-  const imageObj = productImages.reduce(
-    (obj: { [productId: number]: string }, ele) => {
-      obj[ele.product_id] = `https://d1a26cbu5iquck.cloudfront.net/${ele.path}`;
-      return obj;
-    },
-    {}
-  );
-  const varaintObj = variants.reduce(
-    (obj: { [variantId: number]: VariantWithImageShema }, ele) => {
+  productObj: {
+    [productId: string]: { id: number; name: string; image: string };
+  }
+) => {
+  return variants.reduce(
+    (obj: { [variantId: number]: OrderVariantSchema }, ele) => {
       obj[ele.id] = {
-        id: ele.product_id,
-        name: productName[ele.product_id],
         varaintId: ele.id,
         kind: ele.kind,
         price: ele.price,
-        image: imageObj[ele.product_id],
+        image: productObj[ele.product_id].image,
+        id: ele.product_id,
+        name: productObj[ele.product_id].name,
       };
       return obj;
     },
     {}
   );
-  const orderVariantQty = orders.reduce(
-    (obj: { [variantId: number]: number }, ele) => {
-      obj[ele.variant_id] = ele.qty;
-      return obj;
-    },
-    {}
-  );
+};
+
+const groupOrderList = (
+  orders: OrderSchema[],
+  variantObj: { [variantId: number]: OrderVariantSchema }
+) => {
   const orderVariant = orders.reduce(
-    (obj: { [orderId: number]: OrderListVariantSchema[] }, ele) => {
+    (obj: { [orderId: number]: OrderListSchema[] }, ele) => {
       if (!obj[ele.order_id]) obj[ele.order_id] = [];
       obj[ele.order_id].push({
-        ...varaintObj[ele.variant_id],
-        qty: orderVariantQty[ele.variant_id],
+        ...variantObj[ele.variant_id],
+        qty: ele.qty,
       });
       return obj;
     },
@@ -512,14 +518,27 @@ export const getStoreUserOrders = async (req: Request, res: Response) => {
     const orders = await orderModel.findOrderByUserId(userId);
     const orderProductIds = orders.map((ele) => ele.product_id);
     const orderVaraintIds = orders.map((ele) => ele.variant_id);
-    const products = await getOrderProductsByStoreId(orderProductIds, storeId);
-    const storeOrderProductIds = products.map((ele) => ele.id);
-    const variants = await getProductVariantsByProductVariantIds(
-      storeOrderProductIds,
-      orderVaraintIds
+    const productsData = await productModel.getOrderProductsByStoreId(
+      orderProductIds,
+      storeId
     );
-    const productsMainImage = await getProductMainImage(storeOrderProductIds);
-    const data = groupOrderList(variants, productsMainImage, orders, products);
+    const storeOrderProductIds = productsData.map((ele) => ele.id);
+    const storeUserOrders = orders.filter((ele) =>
+      storeOrderProductIds.includes(ele.product_id)
+    );
+    const variants =
+      await productVariantModel.getProductVariantsByProductVariantIds(
+        storeOrderProductIds,
+        orderVaraintIds
+      );
+    const productsMainImage = await productImageModel.getProductMainImage(
+      storeOrderProductIds
+    );
+    const imageObj = productImageModel.groupImages(productsMainImage);
+    const productsWithImage = productsData.map(mapImages(imageObj));
+    const productObj = groupProduct(productsWithImage);
+    const varaintObj = groupOrderVariant(variants, productObj);
+    const data = groupOrderList(storeUserOrders, varaintObj);
     res.status(200).json({ data });
   } catch (err) {
     if (err instanceof Error) {

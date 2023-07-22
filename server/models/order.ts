@@ -1,6 +1,6 @@
 import { Connection } from "mysql2/promise";
 import { z } from "zod";
-import { ResultSetHeader } from "mysql2";
+import instanceOfSetHeader from "../utils/instanceOfSetHeader.js";
 import pool from "./dbPool.js";
 
 /*
@@ -18,21 +18,7 @@ import pool from "./dbPool.js";
   updated_at
 **/
 
-function instanceOfSetHeader(object: any): object is ResultSetHeader {
-  return "insertId" in object;
-}
-
-const OrderCountSchema = z.object({
-  count: z.number(),
-});
-
-type OrderCount = z.infer<typeof OrderCountSchema>;
-
-function instanceOfProductCount(object: any): object is OrderCount {
-  return "count" in object;
-}
-
-export async function createOrder(
+export const createOrder = async (
   userId: number,
   orderInfo: {
     shipping: string;
@@ -47,7 +33,7 @@ export async function createOrder(
     phone: string;
   },
   connection: Connection
-) {
+) => {
   const { payment, subtotal, freight, total } = orderInfo;
   const { name, address, phone } = recipient;
   const results = await connection.query(
@@ -63,28 +49,28 @@ export async function createOrder(
     return { orderId: results[0].insertId };
   }
   throw new Error("create order failed");
-}
+};
 
-export async function transitionStatusFromCreatedToPaid(
+export const transitionStatusFromCreatedToPaid = async (
   orderId: number,
   connection: Connection
-) {
+) => {
   await connection.query(
     `
       UPDATE \`order\`
       SET status = ?
       WHERE id = ? AND status = ?
     `,
-    ["unpay", orderId, "shipping"]
+    ["shipping", orderId, "shipping"]
   );
-}
+};
 
 const UserIdAndTotalSchema = z.object({
   user_id: z.number(),
   total: z.number(),
 });
 
-export async function getUserIdAndTotal() {
+export const getUserIdAndTotal = async () => {
   const [rows] = await pool.query(
     `
       SELECT user_id, total from \`order\`
@@ -92,25 +78,6 @@ export async function getUserIdAndTotal() {
   );
   const orders = z.array(UserIdAndTotalSchema).parse(rows);
   return orders;
-}
-
-export const checkOrderExistByUserProductId = async (
-  userId: number,
-  productId: number
-) => {
-  const results = await pool.query(
-    `
-    SELECT COUNT(id) AS count FROM \`order\`
-    INNER JOIN order_list on order_id = id
-    WHERE user_id = ? AND product_id = ?
-  `,
-    [userId, productId]
-  );
-  if (Array.isArray(results[0]) && instanceOfProductCount(results[0][0])) {
-    const orderCount = OrderCountSchema.parse(results[0][0]);
-    return orderCount.count > 0;
-  }
-  return false;
 };
 
 const OrderSchema = z.object({

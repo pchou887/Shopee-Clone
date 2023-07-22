@@ -87,18 +87,6 @@ export const setExpireStr = async (key: string) => {
   await redis.set(key, 1, "EX", 900);
 };
 
-export const setHset = async (key: string, value: any) => {
-  await redis.hset(key, value);
-};
-
 export const delStr = async (key: string) => {
   await redis.del(key);
-};
-
-export const multi = async () => {
-  return redis.multi({ pipeline: true });
-};
-
-export const exec = () => {
-  return redis.exec((err, result) => result);
 };

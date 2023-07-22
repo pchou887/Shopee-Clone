@@ -204,6 +204,7 @@ function CustomerService() {
                 type="text"
                 name="message"
                 className="cs-chatroom-inputbox"
+                autoComplete="off"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />

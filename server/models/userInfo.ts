@@ -1,6 +1,6 @@
 import { Connection } from "mysql2/promise";
-import { ResultSetHeader } from "mysql2";
 import { z } from "zod";
+import instanceOfSetHeader from "../utils/instanceOfSetHeader.js";
 import pool from "./dbPool.js";
 
 /*
@@ -11,11 +11,7 @@ import pool from "./dbPool.js";
   address
 **/
 
-function instanceOfSetHeader(object: any): object is ResultSetHeader {
-  return "insertId" in object;
-}
-
-export async function createUserInfo(
+export const createUserInfo = async (
   userId: number,
   recipient: {
     name: string;
@@ -24,7 +20,7 @@ export async function createUserInfo(
     address: string;
   },
   connection: Connection
-) {
+) => {
   const { name, email, address, phone } = recipient;
   const results = await connection.query(
     `
@@ -39,7 +35,7 @@ export async function createUserInfo(
     return results[0].insertId;
   }
   throw new Error("create campaign failed");
-}
+};
 
 const userInfoSchema = z.object({
   name: z.string(),

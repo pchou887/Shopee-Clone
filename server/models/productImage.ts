@@ -10,7 +10,7 @@ import pool from "./dbPool.js";
   mimetype varchar(127) NOT NULL
 */
 
-export async function createProductImages(
+export const createProductImages = async (
   imageData: {
     productId: number;
     path: string;
@@ -18,7 +18,7 @@ export async function createProductImages(
     size: number;
     mimetype: string;
   }[]
-) {
+) => {
   try {
     await pool.query(
       `
@@ -36,7 +36,7 @@ export async function createProductImages(
     console.error(err);
     return null;
   }
-}
+};
 
 const ProductImageSchema = z.object({
   product_id: z.number(),
@@ -47,7 +47,7 @@ const ProductImageSchema = z.object({
 
 type ProductImage = z.infer<typeof ProductImageSchema>;
 
-export async function getProductImages(productIds: number[]) {
+export const getProductImages = async (productIds: number[]) => {
   if (productIds.length === 0) return [];
   const result = await pool.query(
     `
@@ -59,31 +59,34 @@ export async function getProductImages(productIds: number[]) {
   );
   const productImages = z.array(ProductImageSchema).parse(result[0]);
   return productImages;
-}
+};
 
-export function groupImages(productImages: ProductImage[]) {
-  const result = productImages.reduce(function (
-    obj: {
-      [productId: string]: {
-        main_image: string;
-        images: string[];
-      };
+export const groupImages = (productImages: ProductImage[]) => {
+  const result = productImages.reduce(
+    (
+      obj: {
+        [productId: string]: {
+          main_image: string;
+          images: string[];
+        };
+      },
+      image
+    ) => {
+      if (!obj[image.product_id]) {
+        obj[image.product_id] = { main_image: "", images: [] };
+      }
+      if (image.type === "main_image") {
+        obj[image.product_id].main_image = image.path;
+      }
+      if (image.type === "images") {
+        obj[image.product_id].images.push(image.path);
+      }
+      return obj;
     },
-    image
-  ) {
-    if (!obj[image.product_id]) {
-      obj[image.product_id] = { main_image: "", images: [] };
-    }
-    if (image.type === "main_image") {
-      obj[image.product_id].main_image = image.path;
-    }
-    if (image.type === "images") {
-      obj[image.product_id].images.push(image.path);
-    }
-    return obj;
-  }, {});
+    {}
+  );
   return result;
-}
+};
 
 export const getProductMainImage = async (productIds: number[]) => {
   const result = await pool.query(

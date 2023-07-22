@@ -20,11 +20,11 @@ interface ProductInput {
   qty: number;
 }
 
-export async function createOrderDetails(
+export const createOrderDetails = async (
   orderId: number,
   products: ProductInput[],
   connection: Connection
-) {
+) => {
   await connection.query(
     `
       INSERT INTO order_list (
@@ -38,4 +38,4 @@ export async function createOrderDetails(
       }),
     ]
   );
-}
+};

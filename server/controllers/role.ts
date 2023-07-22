@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import * as userRoleModel from "../models/userRole.js";
-import * as role from "../models/role.js";
+import * as roleModel from "../models/role.js";
 
 export const getUserNotOwnedRoles = async (req: Request, res: Response) => {
   try {
     const storeId = Number(req.params.storeId);
     const userId = Number(req.params.user_id);
-    const roles = await role.findUserNotOwnedRoles(userId, storeId);
+    const roles = await roleModel.findUserNotOwnedRoles(userId, storeId);
     res.status(200).json({ data: roles });
   } catch (err) {
     if (err instanceof Error) {
@@ -16,6 +16,7 @@ export const getUserNotOwnedRoles = async (req: Request, res: Response) => {
     res.status(500).json({ errors: "server wrong" });
   }
 };
+
 export const getUserRoles = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.params.userId);
@@ -82,6 +83,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
     res.status(500).json({ errors: "something wrong" });
   }
 };
+
 export const deleteUserRoles = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.params.userId);

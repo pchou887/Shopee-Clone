@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import * as productModel from "../models/product.js";
 import * as productImageModel from "../models/productImage.js";
 import * as productVariantModel from "../models/productVariant.js";
@@ -69,6 +69,7 @@ export const getProducts = async (req: Request, res: Response) => {
     return res.status(500).json({ data: [] });
   }
 };
+
 export const getStoreProducts = async (req: Request, res: Response) => {
   try {
     const storeId = Number(req.params.storeId);
@@ -132,19 +133,31 @@ export const getSnapUp = async (req: Request, res: Response) => {
     const redisProduct = await redisModel.getStr(`snapUp:${id}`);
     if (redisProduct) {
       const data = JSON.parse(redisProduct);
-      const variants = await Promise.all(
+      const stocks = await Promise.all(
         data.variants.map(
-          async (ele: {
+          (ele: {
             variantId: number;
             kind: string;
             stock: number;
             price: number;
-          }) => ({
-            ...ele,
-            stock: Number(await redisModel.getStr(`stock:${ele.variantId}`)),
-          })
+          }) => redisModel.getStr(`stock:${ele.variantId}`)
         )
       );
+      const variants = data.variants.map(
+        (
+          ele: {
+            variantId: number;
+            kind: string;
+            stock: number;
+            price: number;
+          },
+          index: number
+        ) => ({
+          ...ele,
+          stock: Number(stocks[index]),
+        })
+      );
+
       res.status(200).json({ data: { ...data, variants } });
       return;
     }
@@ -222,12 +235,10 @@ export const createProduct = async (req: Request, res: Response) => {
       throw new Error("create product failed");
     }
     if (Array.isArray(res.locals.images) && res.locals.images.length > 0) {
-      const productImageData = res.locals.images.map((image) => {
-        return {
-          productId,
-          ...image,
-        };
-      });
+      const productImageData = res.locals.images.map((image) => ({
+        productId,
+        ...image,
+      }));
       productImageModel.createProductImages(productImageData);
     }
     if (typeof req.body.kind === "string" && req.body.kind.length > 0) {

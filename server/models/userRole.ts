@@ -29,21 +29,23 @@ export const findAdminUser = async (storeId: number) => {
 
 type UserRoles = z.infer<typeof UserRolesShema>;
 
-export function groupRolesWithStoreId(userRoles: UserRoles[]) {
-  const result = userRoles.reduce(function (
-    obj: {
-      [storeId: string]: number[];
+export const groupRolesWithStoreId = (userRoles: UserRoles[]) => {
+  return userRoles.reduce(
+    (
+      obj: {
+        [storeId: string]: number[];
+      },
+      userRole
+    ) => {
+      if (!obj[userRole.store_id]) {
+        obj[userRole.store_id] = [];
+      }
+      obj[userRole.store_id].push(userRole.role_id);
+      return obj;
     },
-    userRole
-  ) {
-    if (!obj[userRole.store_id]) {
-      obj[userRole.store_id] = [];
-    }
-    obj[userRole.store_id].push(userRole.role_id);
-    return obj;
-  }, {});
-  return result;
-}
+    {}
+  );
+};
 
 const UserRolesWithTimestampSchema = z.object({
   user_id: z.number(),

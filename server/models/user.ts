@@ -1,6 +1,6 @@
-import { ResultSetHeader } from "mysql2";
 import { z } from "zod";
 import pool from "./dbPool.js";
+import instanceOfSetHeader from "../utils/instanceOfSetHeader.js";
 
 /*
   id bigint unsigned NOT NULL AUTO_INCREMENT
@@ -11,10 +11,6 @@ import pool from "./dbPool.js";
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   providers
 **/
-
-const instanceOfSetHeader = (object: any): object is ResultSetHeader => {
-  return "insertId" in object;
-};
 
 export const createUser = async (email: string, name: string) => {
   const results = await pool.query(

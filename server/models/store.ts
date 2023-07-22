@@ -1,10 +1,6 @@
-import { ResultSetHeader } from "mysql2";
 import { z } from "zod";
 import pool from "./dbPool.js";
-
-function instanceOfSetHeader(object: any): object is ResultSetHeader {
-  return "insertId" in object;
-}
+import instanceOfSetHeader from "../utils/instanceOfSetHeader.js";
 
 export const createStore = async (store: {
   name: number;
@@ -15,9 +11,9 @@ export const createStore = async (store: {
     const { name, city, district } = store;
     const results = await pool.query(
       `
-            INSERT INTO store (name, city, district)
-            VALUES(?, ?, ?)
-          `,
+        INSERT INTO store (name, city, district)
+        VALUES(?, ?, ?)
+      `,
       [name, city, district]
     );
     if (Array.isArray(results) && instanceOfSetHeader(results[0])) {
@@ -46,6 +42,7 @@ export const findStore = async (storeId: number) => {
   return stores;
 };
 export const findStores = async (storeIds: number[]) => {
+  if (storeIds.length === 0) return [];
   const result = await pool.query(`SELECT * FROM store WHERE id IN (?)`, [
     storeIds,
   ]);

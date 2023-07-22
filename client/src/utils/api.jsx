@@ -253,7 +253,7 @@ const api = {
     const response = await fetch(
       `${hostName}${version}/store/${storeId}/user/${staffId}/role/delete`,
       {
-        method: "POST",
+        method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
