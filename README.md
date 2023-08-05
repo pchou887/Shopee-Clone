@@ -28,9 +28,11 @@ The page for snatching products is located at the top right corner of the homepa
 
 This is the architecture diagram of the flash sale page.
 1. Enters the flash sale page, the client will request data from the server to fetch the necessary information for the webpage. Additionally, the client will establish a connection with another Socket.IO server.
-2. When the user selects the desired type and quantity and clicks the button, an event will be sent to the Socket.IO server. The server will then check the status of the queue to determine if it exceeds the team's capacity. It will immediately respond to the client with the current status.
-3. The queue worker continuously monitors the status of the queue and, when a user is eligible to enter the order page, it utilizes Redis pub/sub technology to send real-time notifications to the Socket.IO server. The Socket.IO server, in turn, responds to the user, ensuring that the user can purchase the previously selected quantity of items without any issues.
-4. The number of people allowed to enter the order page is controlled to be within the range of 5 to 20 individuals. As a result, direct payment operations can be performed with the MySQL server. Each order has a time limit, and during the payment process, the system will also verify whether the order has exceeded the time limit.
+2. When the user selects the desired type and quantity and clicks the button, an event will be sent to the Socket.IO server.
+3. The server will then check the status of the queue to determine if it exceeds the team's capacity. It will immediately respond to the client with the current status.
+4. The queue worker continuously monitors the status of the queue and, when a user is eligible to enter the order page, it utilizes Redis pub/sub technology to send real-time notifications to the Socket.IO server.
+5. The Socket.IO server, in turn, responds to the user, ensuring that the user can purchase the previously selected quantity of items without any issues.
+6. The number of people allowed to enter the order page is controlled to be within the range of 5 to 20 individuals. As a result, direct payment operations can be performed with the MySQL server. Each order has a time limit, and during the payment process, the system will also verify whether the order has exceeded the time limit.
 - With the introduction of the "order check worker," you've implemented a mechanism to monitor the order statuses in real-time. By setting a 5-minute payment limit, the worker can track and detect orders that have exceeded the time frame for payment. When this happens, the worker will promptly send the order quantity back to the Socket.IO server, allowing the server to reflect the updated inventory on the webpage.
 
 ![SnapUp](https://github.com/pchou887/Shopee-Clone/assets/118956591/bbb4eaa9-5bbd-4f3c-9195-8928903b2fb7)
