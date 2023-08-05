@@ -289,5 +289,13 @@ const api = {
     const result = await response.json();
     return result;
   },
+  GetSearchProduct: async (keyword) => {
+    const response = await fetch(
+      `${hostName}${version}/products/search?keyword=${keyword}`,
+      { method: "GET" }
+    );
+    const result = await response.json();
+    return result;
+  },
 };
 export default api;

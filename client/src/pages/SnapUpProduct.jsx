@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import api from "../utils/api";
 import toastMessage from "../utils/toast";
@@ -8,6 +8,7 @@ const URL = import.meta.env.VITE_DEV_SNAPUP_SOCKET || "";
 
 function Product() {
   const snapup = true;
+  const { id } = useParams();
   const [isLoad, setIsLoad] = useState(false);
   const [socket] = useState(() => io(URL, { transports: ["websocket"] }));
   const [variantId, setVariantId] = useState("");
@@ -17,6 +18,7 @@ function Product() {
   const [amount, setAmount] = useState(1);
   const navigate = useNavigate();
   useEffect(() => {
+    if (![19, 17].includes(Number(id))) return navigate("/snapup");
     socket.on("wait", async () => {
       await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
       if (window.location.pathname !== "/snapup/order")
@@ -55,7 +57,7 @@ function Product() {
   useEffect(() => {
     async function getProduct() {
       try {
-        const result = await api.GetSnapUpProduct(7);
+        const result = await api.GetSnapUpProduct(id);
         if (result.errors) throw new Error("查無此商品");
         setProduct(result.data);
         setStore(result.data.store);
@@ -136,19 +138,21 @@ function Product() {
   return (
     <>
       {product && (
-        <ProductConponent
-          product={product}
-          store={store}
-          amount={amount}
-          setAmount={setAmount}
-          variantId={variantId}
-          setVariantId={setVariantId}
-          stock={stock}
-          setStock={setStock}
-          sendOrder={sendOrder}
-          snapup={snapup}
-          isLoad={isLoad}
-        />
+        <div className="main">
+          <ProductConponent
+            product={product}
+            store={store}
+            amount={amount}
+            setAmount={setAmount}
+            variantId={variantId}
+            setVariantId={setVariantId}
+            stock={stock}
+            setStock={setStock}
+            sendOrder={sendOrder}
+            snapup={snapup}
+            isLoad={isLoad}
+          />
+        </div>
       )}
     </>
   );

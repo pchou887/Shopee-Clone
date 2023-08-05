@@ -109,7 +109,7 @@ export const countProducts = async ({
       ? `WHERE category = "${category}" AND is_remove = false`
       : "WHERE is_remove = false"
   }
-  ${typeof keyword === "string" ? `WHERE name LIKE ?` : ""}
+  ${typeof keyword === "string" ? `AND name LIKE ?` : ""}
 `,
     [`%${keyword}%`]
   );

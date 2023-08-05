@@ -10,7 +10,11 @@ const Cards = ({ data }) => (
       <Card
         key={`store-${ele.id}`}
         title={ele.name}
-        extra={<a href={`/store/${ele.id}`}>Go to Store</a>}
+        extra={
+          <a href={`/store/${ele.id}`} style={{ color: "blue" }}>
+            點擊前往
+          </a>
+        }
         style={{ width: 300 }}
       >
         <p>{ele.city}</p>

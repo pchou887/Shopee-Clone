@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
+import http from "http";
 import { createServer } from "https";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
@@ -20,19 +21,22 @@ dotenv.config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "./private.key";
 const CERTIFICATE_CRT = process.env.CERTIFICATE_CRT || "./cert.crt";
+const DEVELOPER = process.env.DEVELOPER;
 
 const __dirname = path.resolve("../client/dist/index.html").replace(/\\/g, "/");
 const __dirnamePrivate = path.resolve(PRIVATE_KEY).replace(/\\/g, "/");
 const __dirnameCertificate = path.resolve(CERTIFICATE_CRT).replace(/\\/g, "/");
 
 const app = express();
-const server = createServer(
-  {
-    key: fs.readFileSync(__dirnamePrivate),
-    cert: fs.readFileSync(__dirnameCertificate),
-  },
-  app
-);
+const server = DEVELOPER
+  ? http.createServer(app)
+  : createServer(
+      {
+        key: fs.readFileSync(__dirnamePrivate),
+        cert: fs.readFileSync(__dirnameCertificate),
+      },
+      app
+    );
 const io = new Server(server, {
   cors: {
     origin: "*",

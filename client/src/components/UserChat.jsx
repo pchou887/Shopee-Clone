@@ -144,7 +144,7 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
         </div>
         <div className="chat-area-content">
           <div className="chat-area-content-list">
-            <div className="chat-area-content-list-nav">
+            {/* <div className="chat-area-content-list-nav">
               <div className="chat-area-content-list-search">
                 <input
                   className="chat-area-content-list-input"
@@ -152,7 +152,7 @@ function UserChat({ open, setOpen, storeChat, setStoreChat }) {
                   placeholder="搜尋"
                 />
               </div>
-            </div>
+            </div> */}
             <div className="chat-area-list-name">
               {chats &&
                 chats.map((ele) => (

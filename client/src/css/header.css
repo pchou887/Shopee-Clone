@@ -65,6 +65,8 @@
   margin-right: 3px;
   background-color: #fb5533;
   cursor: pointer;
+  border: #fb5533 1px solid;
+  border-radius: 2px;
 }
 .search-button:hover {
   background-color: rgba(251, 85, 51, 0.9);

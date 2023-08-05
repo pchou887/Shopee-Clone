@@ -47,6 +47,18 @@ function Product({
     <>
       {product && (
         <div className="content">
+          {snapup && (
+            <h1
+              style={{
+                marginTop: 119,
+                fontSize: 48,
+                margin: "auto",
+                maxWidth: 550,
+              }}
+            >
+              🔥🔥🔥限時搶購🔥🔥🔥
+            </h1>
+          )}
           <div className="product">
             <div className="product-img">
               <div className="product-main-img">

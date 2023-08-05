@@ -5,6 +5,7 @@ import toastMessage from "../utils/toast";
 function Header() {
   const navigate = useNavigate();
   const token = localStorage.getItem("jwtToken");
+  const [search, setSearch] = useState("");
   const [isActive, setIsActive] = useState(false);
   function handleLogout() {
     localStorage.removeItem("jwtToken");
@@ -15,6 +16,11 @@ function Header() {
   function goLogin() {
     localStorage.setItem("original", window.location.pathname);
     navigate("/login");
+  }
+  function submitSearch(e) {
+    e.preventDefault();
+    setSearch("");
+    navigate(`/search?keyword=${search}`);
   }
   return (
     <>
@@ -76,23 +82,29 @@ function Header() {
             </div>
           </Link>
           <div className="search">
-            <div className="search-box">
+            <form className="search-box" onSubmit={submitSearch}>
               <input
                 className="search-input"
                 type="text"
                 placeholder="快來搜尋商品開始購物吧!"
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
               />
-              <div className="search-button">
+              <button className="search-button">
                 <img
                   src="https://d1a26cbu5iquck.cloudfront.net/icon/search.png"
                   alt="search-icon"
                   className="search-icon"
                 />
-              </div>
-            </div>
+              </button>
+            </form>
             <div className="search-keyword">
-              <div className="keyword">太鼓鼓棒</div>
-              <div className="keyword">電玩周邊</div>
+              <Link to="/search?keyword=iPhone14">
+                <div className="keyword">iPhone14</div>
+              </Link>
+              <Link to="/search?keyword=電競">
+                <div className="keyword">電競用品</div>
+              </Link>
             </div>
           </div>
           <div className="cart">

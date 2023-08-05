@@ -31,13 +31,13 @@ function Home() {
               <Carousels />
             </div>
             <div className="campaign-other">
-              <Link to="/snapup">
+              <Link to="/snapup/19">
                 <img
                   className="other other-1"
                   src="https://d1a26cbu5iquck.cloudfront.net/campaign/other-campaign1.jpg"
                 />
               </Link>
-              <Link to="/snapup">
+              <Link to="/snapup/17">
                 <img
                   className="other"
                   src="https://d1a26cbu5iquck.cloudfront.net/campaign/other-campaign2.jpeg"

@@ -3,7 +3,7 @@ function ShowProducts({ products }) {
   return (
     <>
       <div className="home-products">
-        {products.length &&
+        {products.length ? (
           products.map((ele) => (
             <Link key={ele.id} to={`/product/${ele.id}`}>
               <div className="home-product">
@@ -18,7 +18,10 @@ function ShowProducts({ products }) {
                 </div>
               </div>
             </Link>
-          ))}
+          ))
+        ) : (
+          <h2>查無商品</h2>
+        )}
       </div>
     </>
   );

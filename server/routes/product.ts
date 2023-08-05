@@ -47,6 +47,15 @@ router
   ]);
 
 router
+  .route("/products/search")
+  .get(
+    query("keyword").not().isEmpty().trim(),
+    query("paging").if(query("paging").exists()).isInt(),
+    validator.handleResult,
+    searchProducts
+  );
+
+router
   .route("/products/:category")
   .get(
     param("category").isIn([
@@ -58,15 +67,6 @@ router
     query("paging").if(query("paging").exists()).isInt(),
     validator.handleResult,
     getProducts
-  );
-
-router
-  .route("/products/search")
-  .get(
-    query("keyword").not().isEmpty().trim(),
-    query("paging").if(query("paging").exists()).isInt(),
-    validator.handleResult,
-    searchProducts
   );
 
 router.route("/product/insert").post([

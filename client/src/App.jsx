@@ -14,6 +14,7 @@ import StoreProducts from "./pages/StoreProduct";
 import CustomerService from "./pages/CustomerService";
 import CreateStore from "./pages/CreateStore";
 import NotFound from "./pages/404notfound";
+import SearchPage from "./pages/SearchPage";
 
 function App() {
   return (
@@ -23,7 +24,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/snapup" element={<SnapUpProduct />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/snapup/:id" element={<SnapUpProduct />} />
           <Route path="/snapup/order" element={<SnapOrder />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cart" element={<Cart />} />
