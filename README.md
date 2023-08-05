@@ -22,21 +22,21 @@ This is my home page ---> [Shopee Clone](https://hyperushle.com)
 
 ## Features
 
-### Basic Features
-#### Buyer
-Users can easily shop on the website, where they can choose to add items to their shopping cart or make direct purchases on the product page. The shopping cart page also stores the previously added items for users. On the order page, the TapPay API is integrated for online payments.
-![Buyer](https://github.com/pchou887/Shopee-Clone/assets/118956591/3692f6c4-bb84-420f-a258-da6a9bfb848b)
-
-#### Seller
-Sellers can view their products within the store, and if they have permission to add and delete products, they can also see the corresponding options in the menu.
-![Store](https://github.com/pchou887/Shopee-Clone/assets/118956591/217d5994-9e83-42d9-bc66-4a9f2541425c)
-
-### Additional features
-#### Snatch Purchase
+### Snatch Purchase
 The page for snatching products is located at the top right corner of the homepage under two icons.
 ![Snatch](https://github.com/pchou887/Shopee-Clone/assets/118956591/d7000032-fcd9-42ae-b87a-775b31ce8cd6)
 
-#### Customer Support
+This is the architecture diagram of the flash sale page.
+1. Enters the flash sale page, the client will request data from the server to fetch the necessary information for the webpage. Additionally, the client will establish a connection with another Socket.IO server.
+2. When the user selects the desired type and quantity and clicks the button, an event will be sent to the Socket.IO server. The server will then check the status of the queue to determine if it exceeds the team's capacity. It will immediately respond to the client with the current status.
+3. The queue worker continuously monitors the status of the queue and, when a user is eligible to enter the order page, it utilizes Redis pub/sub technology to send real-time notifications to the Socket.IO server. The Socket.IO server, in turn, responds to the user, ensuring that the user can purchase the previously selected quantity of items without any issues.
+4. The number of people allowed to enter the order page is controlled to be within the range of 5 to 20 individuals. As a result, direct payment operations can be performed with the MySQL server. Each order has a time limit, and during the payment process, the system will also verify whether the order has exceeded the time limit.
+- With the introduction of the "order check worker," you've implemented a mechanism to monitor the order statuses in real-time. By setting a 5-minute payment limit, the worker can track and detect orders that have exceeded the time frame for payment. When this happens, the worker will promptly send the order quantity back to the Socket.IO server, allowing the server to reflect the updated inventory on the webpage.
+
+![SnapUp](https://github.com/pchou887/Shopee-Clone/assets/118956591/bbb4eaa9-5bbd-4f3c-9195-8928903b2fb7)
+
+
+### Customer Support
 - Store Chat
 
 If users have customer service permissions within the store, they can click to access the customer support page. On the left side are the customers who have previously chatted with the store, in the middle are the chat records, and on the right side are the orders previously completed by that customer.
@@ -47,8 +47,8 @@ If users have customer service permissions within the store, they can click to a
 Users can view the previously conversed stores and their chat records within their chat rooms.
 ![chat](https://github.com/pchou887/Shopee-Clone/assets/118956591/8155a545-9736-434f-a23d-54ad40917c03)
 
-#### Permission Management
-The permission management section will be directly displayed on the left-hand menu after entering the marketplace. If the user holds a managerial position or above, they can also perform CRUD operations on employee permissions.
+### Permission Management
+After entering the marketplace, the permission management section will be directly displayed on the left-hand menu. Users with managerial positions or above will have the capability to perform CRUD operations on employee permissions and see the corresponding options in the menu. We utilize RBAC (Role-Based Access Control) to differentiate the permissions for each position.
 ![Permission](https://github.com/pchou887/Shopee-Clone/assets/118956591/7ff56ce1-3d01-4f54-a715-22b270314918)
 
 ## Test account
