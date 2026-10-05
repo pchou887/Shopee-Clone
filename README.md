@@ -14,7 +14,6 @@
 
 This is a Shopee-inspired website, where buyers can purchase products and use the shopping cart, while sellers can perform product and permission CRUD operations. Additionally, the platform features a queuing system for product purchases during high-demand events.
 
-This is my home page ---> [Shopee Clone](https://hyperushle.com)
 ![Home-page](https://github.com/pchou887/Shopee-Clone/assets/118956591/c6c3ec64-5197-4aae-82e4-212d832d3834)
 
 ## Server Structure
